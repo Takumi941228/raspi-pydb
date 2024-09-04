@@ -259,6 +259,26 @@ INSERT INTO BankAccount(account_id,first_name, last_name, balance, atm_count) VA
 MariaDB [practice]> SELECT * FROM BankAccount;
 ```
 
+```bash
++------------+------------+-----------+------------------+-----------+
+| account_id | first_name | last_name | balance          | atm_count |
++------------+------------+-----------+------------------+-----------+
+| 2795028    | Koichi     | Hasegawa  |        24362.060 |         5 |
+| 3141592    | Thomas     | Edison    |         -279.670 |        10 |
+| 43383      | Bell       | Graham    |          693.010 |         1 |
+| 653589793  | Nicola     | Tesla     |        50288.450 |         2 |
+| 84197169   | Carlos     | Ghosn     | 314159265358.970 |         6 |
+| 8462626    | Watt       | James     |        41971.230 |         3 |
++------------+------------+-----------+------------------+-----------+
+6 rows in set (0.001 sec)
+```
+
+exitコマンドでデータベースの操作から抜ける。
+
+```sql
+MariaDB [practice]> exit
+```
+
 ## 4. MariaDBとPythonの連携
 
 Python から MariaDB を操作するプログラムを作成します。
