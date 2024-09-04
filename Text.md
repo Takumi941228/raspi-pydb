@@ -413,7 +413,6 @@ account_id       first_name      last_name       balance          atm_count
 84197169 ,       Carlos ,        Ghosn ,         314159265358.970 ,      6
 ```
 
-
 なお、クエリを指定するにあたって、下記のような
 
 ```db
@@ -437,15 +436,14 @@ SELECT account_id, first_name, last_name, balance, atm_count FROM ...
 1 行のデータを挿入することを考えます。クエリ文字列は下記のようになります。
 
 ```sql
-INSERT INTO BankAccount(account_id, first_name, last_name, balance, atm_count)
-VALUES('1234567', 'Jhon', 'von Neumann', 9999.98, 55)
+INSERT INTO BankAccount(account_id, first_name,last_name, balance, atm_count) VALUES('1234567','Jhon', 'von Neumann', 9999.98, 55)
 ```
 
 次のプログラムは、1 行のデータを上記のクエリを使って挿入した後、すべての行を選択し表示します。クエリ文字列を設定して実行するまでの手順は、ほぼ同一であることを確認してください。
 
 挿入したデータを実際に反映させるには、commit()メソッドを実行する必要があります。
 
-```python :insert01.py
+```python
 sql_connection.commit()
 ```
 
