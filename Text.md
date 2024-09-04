@@ -20,19 +20,18 @@ BME280センサ等のセンサからデータを取得して、それらのデ�
 
 まず、aptパッケージのアップデートをします。
 
-```cmd
+```bash
 pi@raspberrypi:~ $ sudo apt update
 ```
-
 
 本実習では、開発環境として`idle`を利用します。
 下記のコマンドで、インストールを行ってください。すでにインストールされている場合は、実行する必要はありません。
 
-```cmd
+```bash
 pi@raspberrypi:~ $ sudo apt -y install idle-python3.11
 ```
 
-```cmd
+```bash
 pi@raspberrypi:~ $ sudo apt -y install python3-pymysql
 ```
 
@@ -40,7 +39,7 @@ pi@raspberrypi:~ $ sudo apt -y install python3-pymysql
 
 下記のコマンドで`MariaDB Server`をインストールします。
 
-```cmd
+```bash
 pi@raspberrypi:~ $ sudo apt -y install mariadb-server
 ```
 
@@ -56,23 +55,23 @@ pi@raspberrypi:~ $ sudo apt -y install mariadb-server
 MariaDB側で、テーブルとデータベースを作成します。
 MariaDBにroot ユーザでログインして、データベースを作成します。
 
-```cmd
+```bash
 pi@raspberrypi:~ $ sudo mariadb -u root -p
 ```
 
-```db
+```sql
 MariaDB[(none)]> CREATE DATABASE practice CHARACTER SET utf8mb4;
 ```
 
 #### ユーザの作成
 
-```db
+```sql
 MariaDB [(none)]> CREATE user 'ユーザ名'@'localhost identified by '任意のパスワード';
 ```
 
 #### ユーザの確認
 
-```db
+```sql
 MariaDB [(none)]> SELECT host, user from mysql.user;
 ```
 
@@ -86,32 +85,32 @@ MariaDB [(none)]> SELECT host, user from mysql.user;
 
 次のコマンドは、"iot_user"に関する権限を付与します。付与する権限は、データベース"practice" に対する、一般的な SQL コマンドの使用です。
 
-```db
+```sql
 MariaDB [(none)]> GRANT select, update, insert, delete ON practice.* TO 'iot_user'@'localhost';
 ```
 
 次のコマンドは、"iot_admin" に関する権限を付与します。付与する権限は、データベース
 "practice"に対する、すべての SQL コマンドの使用です。
 
-```db
+```sql
 MariaDB [(none)]> GRANT ALL PRIVILEGES ON practice.* TO 'iot_admin'@'localhost';
 ```
 
 #### 権限の確認
 
-```db
+```sql
 MariaDB [practice]> SHOW grants for iot_user@localhost;
 ```
 
 #### データベースの確認
 
-```db
+```sql
 MariaDB [none]> SHOW databases;
 ```
 
 #### データベースの選択
 
-```db
+```sql
 MariaDB [none]> use practice
 ```
 
@@ -127,7 +126,7 @@ MariaDB [none]> use practice
 | balance | 残高 | DECIMAL(16,3) | 大富豪に対応し16桁まで。小数点以下は 3 位まで記録 | - |
 | atm_count | ATM利用回数 | INT | 小数点を使用しない | - |
 
-```db
+```sql
 MariaDB [practice]> CREATE TABLE
                     -> BankAccount( account_id CHAR(10)
                     -> PRIMARY KEY, first_name
@@ -141,13 +140,13 @@ MariaDB [practice]> CREATE TABLE
 
 #### テーブルの確認
 
-```db
+```sql
 MariaDB [practice]> show tables;
 ```
 
 #### テーブルの中身の確認
 
-```db
+```sql
 MariaDB [practice]> show fields from BankAccount;
 ```
 
@@ -165,39 +164,39 @@ MariaDB [practice]> show fields from BankAccount;
 次のコマンドに倣って、データを追加しましょう。
 文字列データは ' ' (シングルクオート) で囲みます。数値データはそのまま入力します
 
-```db
+```sql
 INSERT INTO
 BankAccount(account_id, first_name, last_name, balance, atm_count) VALUES('3141592', 'Thomas', 'Edison', -279.67, 10);
 ```
 
-```db
+```sql
 INSERT INTO
 BankAccount(account_id, first_name, last_name, balance, atm_count) VALUES('653589793', 'Nicola', 'Tesla', 50288.45 , 2);
 ```
 
-```db
+```sql
 INSERT INTO
 BankAccount(account_id, first_name, last_name, balance, atm_count) VALUES('8462626', 'Watt', 'James', 41971.23 , 3);
 ```
 
-```db
+```sql
 INSERT INTO
 BankAccount(account_id, first_name, last_name, balance, atm_count) VALUES('43383', 'Bell', 'Graham', 693.01 , 1);
 ```
 
-```db
+```sql
 INSERT INTO
 BankAccount(account_id, first_name, last_name, balance, atm_count) VALUES('84197169', 'Carlos', 'Ghosn',314159265358.97,6);
 ```
 
-```db
+```sql
 INSERT INTO
 BankAccount(account_id, first_name, last_name, balance, atm_count) VALUES('2795028', 'Koichi', 'Hasegawa', 24362.06,5);
 ```
 
 ### 3.1　データの確認
 
-```db
+```sql
 MariaDB [practice]> SELECT * FROM BankAccount;
 ```
 
@@ -206,34 +205,31 @@ MariaDB [practice]> SELECT * FROM BankAccount;
 Python から MariaDB を操作するプログラムを作成します。
 下記のように、プログラムを収納するディレクトリを作成します。
 
-```cmd
+```bash
 pi@raspberrypi:~ $ cd ~
 ```
 
-```cmd
+```bash
 pi@raspberrypi:~ $ mkdir python_sql
 ```
 
-```cmd
+```bash
 pi@raspberrypi:~ $ cd python_sql
 ```
 
 MariaDB で管理されているデータベースを Python から操作するには、"PyMySQL"ライブラリを利用する必要があります。
 下記のコマンドを使って、PyMySQL がすでにインストールされているか確認しましょう。
 
-
-```cmd
+```bash
 pi@raspberrypi:~ $ pip list | grep PyMySQL
 ```
 
-```cmd
+```bash
 PyMySQL                            1.0.2
 types-PyMySQL                      1.0
 ```
 
 上記のように PyMySQL が表示されればインストールされています。
-表示されていなければ、「1.1.Python の開発環境」の手順で PyMySQL をインストールしてください。
-
 
 PyMySQL モジュールについては、下記の URL より情報を収集することができます。
 
@@ -246,7 +242,7 @@ Python から MariaDB のクエリを実行します。
 
 次のソースコードを作成し、実行してください。
 
-```python:select01.py
+```python :select01.py
 #coding: utf-8
 
 import pymysql.cursors #PythonからDBを利用するためのモジュールを利用
@@ -285,11 +281,10 @@ Python から SQL サーバに接続し、クエリを実行してデータベ�
 データベースのデータを参照するだけで内容を変更しないクエリは、概ね下記のようなコードで実行できます。変更する箇所は、下記コードの四角で囲った部分です。
 なお、「データを参照するだけで内容を変更しない操作」を「副作用のない操作」ということもあります。
 
-```python
+```python :select02.py
 #coding: utf-8
 import pymysql.cursors #PythonからDBを利用するためのモジュールを利用
 
-#select02.py:
 #テーブルのデータを表示する
 
 def main():
