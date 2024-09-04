@@ -118,16 +118,43 @@ MariaDB [(none)]> GRANT ALL PRIVILEGES ON practice.* TO 'iot_admin'@'localhost';
 MariaDB [practice]> SHOW grants for iot_user@localhost;
 ```
 
+```bash
++-----------------------------------------------------------------------------------------------------------------+
+| Grants for iot_user@localhost                                                                                   |
++-----------------------------------------------------------------------------------------------------------------+
+| GRANT USAGE ON *.* TO `iot_user`@`localhost` IDENTIFIED BY PASSWORD '*DDFB542AA0BD1D251995D81AEBEB96DEEAD1132F' |
+| GRANT SELECT, INSERT, UPDATE, DELETE ON `practice`.* TO `iot_user`@`localhost`                                  |
++-----------------------------------------------------------------------------------------------------------------+
+2 rows in set (0.000 sec)
+```
+
 #### データベースの確認
 
 ```sql
 MariaDB [none]> SHOW databases;
 ```
 
+```bash
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| practice           |
+| sys                |
++--------------------+
+5 rows in set (0.001 sec)
+```
+
 #### データベースの選択
 
 ```sql
-MariaDB [none]> use practice
+MariaDB [none]> use practice;
+```
+
+```bash
+Database changed
 ```
 
 #### テーブルの作成
@@ -160,10 +187,32 @@ MariaDB [practice]> CREATE TABLE
 MariaDB [practice]> show tables;
 ```
 
+```bash
++--------------------+
+| Tables_in_practice |
++--------------------+
+| BankAccount        |
++--------------------+
+1 row in set (0.001 sec)
+```
+
 #### テーブルの中身の確認
 
 ```sql
 MariaDB [practice]> show fields from BankAccount;
+```
+
+```bash
++------------+---------------+------+-----+---------+-------+
+| Field      | Type          | Null | Key | Default | Extra |
++------------+---------------+------+-----+---------+-------+
+| account_id | char(10)      | NO   | PRI | NULL    |       |
+| first_name | varchar(100)  | YES  |     | NULL    |       |
+| last_name  | varchar(100)  | YES  |     | NULL    |       |
+| balance    | decimal(16,3) | YES  |     | NULL    |       |
+| atm_count  | int(11)       | YES  |     | NULL    |       |
++------------+---------------+------+-----+---------+-------+
+5 rows in set (0.002 sec)
 ```
 
 ### 3.2 データの追加
@@ -181,33 +230,27 @@ MariaDB [practice]> show fields from BankAccount;
 文字列データは ' ' (シングルクオート) で囲みます。数値データはそのまま入力します
 
 ```sql
-INSERT INTO
-BankAccount(account_id, first_name, last_name, balance, atm_count) VALUES('3141592', 'Thomas', 'Edison', -279.67, 10);
+INSERT INTO BankAccount(account_id,first_name, last_name, balance, atm_count) VALUES('3141592', 'Thomas', 'Edison', -279.67, 10);
 ```
 
 ```sql
-INSERT INTO
-BankAccount(account_id, first_name, last_name, balance, atm_count) VALUES('653589793', 'Nicola', 'Tesla', 50288.45 , 2);
+INSERT INTO BankAccount(account_id,first_name, last_name, balance, atm_count) VALUES('653589793', 'Nicola', 'Tesla', 50288.45, 2);
 ```
 
 ```sql
-INSERT INTO
-BankAccount(account_id, first_name, last_name, balance, atm_count) VALUES('8462626', 'Watt', 'James', 41971.23 , 3);
+INSERT INTO BankAccount(account_id,first_name, last_name, balance, atm_count) VALUES('8462626', 'Watt', 'James', 41971.23, 3);
 ```
 
 ```sql
-INSERT INTO
-BankAccount(account_id, first_name, last_name, balance, atm_count) VALUES('43383', 'Bell', 'Graham', 693.01 , 1);
+INSERT INTO BankAccount(account_id,first_name, last_name, balance, atm_count) VALUES('43383', 'Bell', 'Graham', 693.01, 1);
 ```
 
 ```sql
-INSERT INTO
-BankAccount(account_id, first_name, last_name, balance, atm_count) VALUES('84197169', 'Carlos', 'Ghosn',314159265358.97,6);
+INSERT INTO BankAccount(account_id,first_name, last_name, balance, atm_count) VALUES('84197169', 'Carlos', 'Ghosn',314159265358.97, 6);
 ```
 
 ```sql
-INSERT INTO
-BankAccount(account_id, first_name, last_name, balance, atm_count) VALUES('2795028', 'Koichi', 'Hasegawa', 24362.06,5);
+INSERT INTO BankAccount(account_id,first_name, last_name, balance, atm_count) VALUES('2795028', 'Koichi', 'Hasegawa', 24362.06, 5);
 ```
 
 ### 3.1　データの確認
