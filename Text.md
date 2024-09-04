@@ -24,6 +24,7 @@ BME280センサ等のセンサからデータを取得して、それらのデ�
 pi@raspberrypi:~ $ sudo apt update
 ```
 
+
 本実習では、開発環境として`idle`を利用します。
 下記のコマンドで、インストールを行ってください。すでにインストールされている場合は、実行する必要はありません。
 
@@ -56,7 +57,7 @@ MariaDB側で、テーブルとデータベースを作成します。
 MariaDBにroot ユーザでログインして、データベースを作成します。
 
 ```bash
-pi@raspberrypi:~ $ sudo mariadb -u root -p
+pi@raspberrypi:~ $ sudo mariadb -u root
 ```
 
 ```sql
@@ -65,8 +66,10 @@ MariaDB[(none)]> CREATE DATABASE practice CHARACTER SET utf8mb4;
 
 #### ユーザの作成
 
+ユーザ名`iot_user`と`iot_admin`を作成する。
+
 ```sql
-MariaDB [(none)]> CREATE user 'ユーザ名'@'localhost identified by '任意のパスワード';
+MariaDB [(none)]> CREATE user 'ユーザ名'@'localhost' identified by '任意のパスワード';
 ```
 
 #### ユーザの確認
@@ -75,7 +78,20 @@ MariaDB [(none)]> CREATE user 'ユーザ名'@'localhost identified by '任意の
 MariaDB [(none)]> SELECT host, user from mysql.user;
 ```
 
+以下のようになる。
 
+```bash
++-----------+-------------+
+| Host      | User        |
++-----------+-------------+
+| localhost | iot_admin   |
+| localhost | iot_user    |
+| localhost | mariadb.sys |
+| localhost | mysql       |
+| localhost | root        |
++-----------+-------------+
+5 rows in set (0.002 sec)
+```
 
 #### 権限の付与
 
