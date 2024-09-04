@@ -300,7 +300,7 @@ MariaDB で管理されているデータベースを Python から操作する�
 下記のコマンドを使って、PyMySQL がすでにインストールされているか確認しましょう。
 
 ```bash
-pi@raspberrypi:~ $ pip list | grep PyMySQL
+pi@raspberrypi:~/python_sql $ pip list | grep PyMySQL
 ```
 
 ```bash
@@ -331,29 +331,41 @@ import pymysql.cursors #PythonからDBを利用するためのモジュールを
 
 def main():
 #DBサーバに接続する
-sql_connection = pymysql.connect(
-    user='iot_user', #データベースにログインするユーザ名
-    passwd='password',#データベースユーザのパスワード
-    host='localhost', #接続先DBのホストorIPアドレス
-    db='practice'
-)
-#cursorオブジェクトのインスタンスを生成
-sql_cursor = sql_connection.cursor()
+    sql_connection = pymysql.connect(
+        user='iot_user', #データベースにログインするユーザ名
+        passwd='password',#データベースユーザのパスワード
+        host='localhost', #接続先DBのホストorIPアドレス
+        db='practice'
+    )
+    #cursorオブジェクトのインスタンスを生成
+    sql_cursor = sql_connection.cursor()
 
-query = 'SELECT * FROM BankAccount;' #クエリのコマンド
-sql_cursor.execute(query) #クエリを実行
-print(query, ' のクエリの結果\n')
-print( 'account_id \t', 'first_name \t', 'last_name \t', 'balance \t ','atm_count')
+    query = 'SELECT * FROM BankAccount;' #クエリのコマンド
+    sql_cursor.execute(query) #クエリを実行
+    print(query, ' のクエリの結果\n')
+    print( 'account_id \t', 'first_name \t', 'last_name \t', 'balance \t ','atm_count' )
 
-#クエリを実行した結果得られたデータを 1 行ずつ表示する
-for row in sql_cursor.fetchall():
-    print( row[0], ',\t', row[1], ',\t', row[2], ',\t', row[3], ',\t', row[4])
+    #クエリを実行した結果得られたデータを 1 行ずつ表示する
+    for row in sql_cursor.fetchall():
+        print( row[0], ',\t', row[1], ',\t', row[2], ',\t', row[3], ',\t', row[4])
 main()
 ```
 
 結果は次のようになります。
 
-Python から SQL サーバに接続し、クエリを実行してデータベース内のデータを取得することができました。
+```bash
+SELECT * FROM BankAccount;  のクエリの結果
+
+account_id       first_name      last_name       balance          atm_count
+2795028 ,        Koichi ,        Hasegawa ,      24362.060 ,     5
+3141592 ,        Thomas ,        Edison ,        -279.670 ,      10
+43383 ,  Bell ,  Graham ,        693.010 ,       1
+653589793 ,      Nicola ,        Tesla ,         50288.450 ,     2
+84197169 ,       Carlos ,        Ghosn ,         314159265358.970 ,      6
+8462626 ,        Watt ,  James ,         41971.230 ,     3
+```
+
+PythonからSQLサーバに接続し、クエリを実行してデータベース内のデータを取得することができました。
 
 
 ### 4.2 データベースの内容を変更しないクエリの実行
