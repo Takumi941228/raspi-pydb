@@ -25,7 +25,7 @@ pi@raspberrypi:~ $ sudo apt update
 ```
 
 
-本実習では、開発環境として"idle"を利用します。
+本実習では、開発環境として`idle`を利用します。
 下記のコマンドで、インストールを行ってください。すでにインストールされている場合は、実行する必要はありません。
 
 ```cmd
@@ -38,7 +38,7 @@ pi@raspberrypi:~ $ sudo apt -y install python3-pymysql
 
 ### 2.2 MariaDB(MySQL)Serverの環境構築
 
-下記のコマンドで MariaDB Server をインストールします。
+下記のコマンドで`MariaDB Server`をインストールします。
 
 ```cmd
 pi@raspberrypi:~ $ sudo apt -y install mariadb-server
@@ -123,7 +123,7 @@ MariaDB [none]> use practice
 | --- | --- | --- | --- | --- |
 |account_id | 口座番号 | CAHR(10) | 最大10桁まで対応文字列として処理 | ◯ |
 | first_name | 名前 | VARCHAR(100) | 長い名前 の人に対応し100byteまで対応 | - |
-| last_name | 名字 | VARCHAR(100) | ^ |  - | 
+| last_name | 名字 | VARCHAR(100) | 長い名前 の人に対応し100byteまで対応 |  - | 
 | balance | 残高 | DECIMAL(16,3) | 大富豪に対応し16桁まで。小数点以下は 3 位まで記録 | - |
 | atm_count | ATM利用回数 | INT | 小数点を使用しない | - |
 
@@ -137,8 +137,7 @@ MariaDB [practice]> CREATE TABLE
                     -> INT );
 ```
 
-※SQL では、コマンドを複数行にわたって記述することができます。
-
+※SQLでは、Enterで改行して、コマンドを複数行にわたって記述することができます。
 
 #### テーブルの確認
 
@@ -248,10 +247,9 @@ Python から MariaDB のクエリを実行します。
 次のソースコードを作成し、実行してください。
 
 ```python
-# select01.py
 #coding: utf-8
 
-import pymysql.cursors #Python から DB を利用するためのモジュールを利用
+import pymysql.cursors #PythonからDBを利用するためのモジュールを利用
 
 #select01.py:
 #テーブルのデータを表示する
@@ -259,14 +257,155 @@ import pymysql.cursors #Python から DB を利用するためのモジュール
 def main():
 #DB サーバに接続する
 sql_connection = pymysql.connect(
-user='iot_user', #データベースにログインするユーザ名passwd='password',#データベースユーザのパスワードhost='localhost', #接続先 DB のホスト orIP アドレスdb='practice'
+    user='iot_user', #データベースにログインするユーザ名
+    passwd='password',#データベースユーザのパスワード
+    host='localhost', #接続先DBのホストorIPアドレス
+    db='practice'
 )
-#cursor オブジェクトのインスタンスを生成
+#cursorオブジェクトのインスタンスを生成
 sql_cursor = sql_connection.cursor()
 
-query = 'SELECT * FROM BankAccount;' #クエリのコマンドsql_cursor.execute(query)	#クエリを実行print(query, ' のクエリの結果\n')
+query = 'SELECT * FROM BankAccount;' #クエリのコマンド
+sql_cursor.execute(query) #クエリを実行
+print(query, ' のクエリの結果\n')
 print( 'account_id \t', 'first_name \t', 'last_name \t', 'balance \t ','atm_count')
+
+#クエリを実行した結果得られたデータを 1 行ずつ表示する
+for row in sql_cursor.fetchall():
+    print( row[0], ',\t', row[1], ',\t', row[2], ',\t', row[3], ',\t', row[4])
+main()
 ```
 
 結果は次のようになります。
 
+Python から SQL サーバに接続し、クエリを実行してデータベース内のデータを取得することができました。
+
+
+### 4.2 データベースの内容を変更しないクエリの実行
+
+データベースのデータを参照するだけで内容を変更しないクエリは、概ね下記のようなコードで実行できます。変更する箇所は、下記コードの四角で囲った部分です。
+なお、「データを参照するだけで内容を変更しない操作」を「副作用のない操作」ということもあります。
+
+```python
+#coding: utf-8
+import pymysql.cursors #PythonからDBを利用するためのモジュールを利用
+
+#select02.py:
+#テーブルのデータを表示する
+
+def main():
+#DB サーバに接続する
+sql_connection = pymysql.connect(
+    user='iot_user', #データベースにログインするユーザ名
+    passwd='password',#データベースユーザのパスワード
+    host='localhost', #接続先DBのホストorIPアドレス
+    db='practice'
+)
+#cursor オブジェクトのインスタンスを生成
+sql_cursor = sql_connection.cursor()
+
+query = 'SELECT account_id, first_name, last_name, balance, atm_count FROM BankAccount WHERE atm_count
+>= 5;' #クエリのコマンド
+sql_cursor.execute(query) #クエリを実行
+print(query, ' のクエリの結果\n')
+print( 'account_id \t', 'first_name \t', 'last_name \t', 'balance \t ','atm_count')
+
+#クエリを実行した結果得られたデータを 1 行ずつ表示する
+for row in sql_cursor.fetchall():
+    print( row[0], ',\t', row[1], ',\t', row[2], ',\t', row[3], ',\t', row[4])
+main()
+```
+
+結果は次のようになります。
+
+
+なお、クエリを指定するにあたって、下記のような
+
+```db
+SELECT * FROM ...
+```
+
+カラム名を * で指定するような書き方は避けるべきです。
+
+下記のように
+
+```db
+SELECT account_id, first_name, last_name, balance, atm_count FROM ...
+```
+
+カラム名を指定すると良いでしょう。
+
+### 4.3 データベースの内容を変更するクエリの実行
+
+#### 4.3.1 クエリを直接指定する方法
+
+1 行のデータを挿入することを考えます。クエリ文字列は下記のようになります。
+
+```db
+INSERT INTO BankAccount(account_id, first_name, last_name, balance, atm_count)
+VALUES('1234567', 'Jhon', 'von Neumann', 9999.98, 55)
+```
+
+次のプログラムは、1 行のデータを上記のクエリを使って挿入した後、すべての行を選択し表示します。クエリ文字列を設定して実行するまでの手順は、ほぼ同一であることを確認してください。
+
+挿入したデータを実際に反映させるには、commit()メソッドを実行する必要があります。
+
+```python
+sql_connection.commit()
+```
+
+```python
+#coding: utf-8
+import pymysql.cursors #Python から DB を利用するためのモジュールを利用
+
+#insert01.py:
+#テーブルにデータを挿入する
+
+def main():
+#DB サーバに接続する
+sql_connection = pymysql.connect(
+    user='iot_user', #データベースにログインするユーザ名
+    passwd='password', #データベースユーザのパスワード
+    host='localhost', #接続先DBのホストorIPアドレス
+    db='practice'
+)
+#cursor オブジェクトのインスタンスを生成
+sql_cursor = sql_connection.cursor()
+
+#テーブルにデータを挿入する 
+print('●クエリの実行(データの挿入)')
+query1 = "INSERT INTO BankAccount(account_id, first_name, last_name, balance, atm_count) " \ " VALUES('1234567', 'Jhon', 'von Neumann', 9999.98, 55)";
+
+print('実行するクエリ: ' + query1)
+
+result1 = sql_cursor.execute(query1) #クエリを実行。変更したrowの数が戻り値となる
+print('クエリを実行しました。('+ str(result1) +' row affected.)')
+
+#変更を実際に反映させる
+sql_connection.commit()
+
+#挿入したデータを含めてすべてのデータを表示
+print('●クエリの実行(データの選択)')
+query2 = 'SELECT account_id, first_name, last_name, balance, atm_count FROM BankAccount;' #クエリのコマンド
+
+print('実行するクエリ: ' + query2)
+result2 = sql_cursor.execute(query2) #クエリを実行。取得したrowが戻り値となる
+
+print('クエリを実行しました。('+ str(result2) +' row affected.)')
+
+print( 'account_id \t', 'first_name \t', 'last_name \t', 'balance \t ','atm_count')
+#クエリを実行した結果得られたデータを1行ずつ表示する
+for row in sql_cursor.fetchall():
+    print( row[0], ',\t', row[1], ',\t', row[2], ',\t', row[3], ',\t', row[4])
+main()
+```
+
+結果は下記のとおりです。
+
+※行を削除するコマンド
+デバッグのためにプログラムを再実行すると、同じデータを重複して挿入することになります。
+MariaDBにログインして、下記のように新しく追加するデータを予め削除しておきましょう。
+
+```db
+MariaDB [practice]> DELETE FROM BankAccount WHERE account_id = '1234567';
+```
