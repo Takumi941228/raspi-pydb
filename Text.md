@@ -246,12 +246,11 @@ Python から MariaDB のクエリを実行します。
 
 次のソースコードを作成し、実行してください。
 
-```python
+```python:select01.py
 #coding: utf-8
 
 import pymysql.cursors #PythonからDBを利用するためのモジュールを利用
 
-#select01.py:
 #テーブルのデータを表示する
 
 def main():
