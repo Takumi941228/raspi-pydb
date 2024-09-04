@@ -605,6 +605,24 @@ main()
 
 実行結果は次のようになります。
 
+```bash
+●クエリの実行(データの挿入)
+実行するクエリ: INSERT INTO BankAccount(account_id, first_name, last_name, balance, atm_count)  VALUES(%s, %s, %s, %s, %s)
+クエリを実行しました。(1 row affected.)
+●クエリの実行(データの選択)
+実行するクエリ: SELECT account_id, first_name, last_name, balance, atm_count FROM BankAccount;
+クエリを実行しました。(8 row affected.)
+account_id       first_name      last_name       balance          atm_count
+1234567 ,        Jhon ,  von Neumann ,   9999.980 ,      55
+223344 ,         Stieve ,        Jobs ,  9999999.230 ,   24
+2795028 ,        Koichi ,        Hasegawa ,      24362.060 ,     5
+3141592 ,        Thomas ,        Edison ,        -279.670 ,      10
+43383 ,  Bell ,  Graham ,        693.010 ,       1
+653589793 ,      Nicola ,        Tesla ,         50288.450 ,     2
+84197169 ,       Carlos ,        Ghosn ,         314159265358.970 ,      6
+8462626 ,        Watt ,  James ,         41971.230 ,     3
+```
+
 #### 4.3.3 クエリとデータを分離する方法 その２
 
 クエリにプレースホルダを設定し、実データはディクショナリ形式で指定します。 ディクショナリ形式でのデータの指定に備えて、プレースホルダにキー名を指定します。ここで指定するキー名は、ディクショナリでのキー名と一致する必要があります。
@@ -644,7 +662,10 @@ import pymysql.cursors #Python から DB を利用するためのモジュール
 def main():
     #DB サーバに接続する
     sql_connection = pymysql.connect(
-    user='iot_user', #データベースにログインするユーザ名passwd='password',#データベースユーザのパスワードhost='localhost', #接続先 DB のホスト orIP アドレスdb='practice'
+        user='iot_user', #データベースにログインするユーザ名
+        passwd='password',#データベースユーザのパスワード
+        host='localhost', #接続先DBのホストorIPアドレス
+        db='practice'
     )
 
     #cursor オブジェクトのインスタンスを生成
@@ -654,10 +675,13 @@ def main():
 
     #クエリを指定する。実データは後から指定する。
     #実データはディクショナリ形式とするため、ブレースホルダにキー名を指定する
-    query1 = "INSERT INTO BankAccount(account_id, first_name,last_name, balance, atm_count)VALUES(" \ "%(account_id)s, " \
-    "%(first_name)s, " \ "%(last_name)s, " \ "%(balance)s, " \
-    "%(atm_count)s );"
-
+    query1 = "INSERT INTO BankAccount(account_id, first_name,last_name, balance, atm_count) " \
+            " VALUES( " \
+            " %(account_id)s, " \
+            " %(first_name)s, " \
+            " %(last_name)s, " \
+            " %(balance)s, " \
+            " %(atm_count)s );"
 
     print('実行するクエリ: ' + query1)
 
@@ -665,15 +689,16 @@ def main():
     new_row = {
         'account_id' : '998877',
         'first_name' : 'Bill' ,
-        'last_name' : 'Gates'
+        'last_name' : 'Gates',
         'balance' : 88888888.34,
         'atm_count' : 54
     }
 
-    print('ディクショナリ内のデータ: ') print(new_row)
+    print('ディクショナリ内のデータ: ')
+    print(new_row)
 
     #ディクショナリ変数に格納されたデータを指定して挿入を実行する
-    result1 = sql_cursor.execut(query1, new_row)
+    result1 = sql_cursor.execute(query1, new_row)
 
     #クエリを実行。変更したrowの数が戻り値となる
     print('クエリを実行しました。('+ str(result1) +' row affected.)')
@@ -698,3 +723,23 @@ main()
 ```
 
 実行結果は次のようになります。
+
+```bash
+実行するクエリ: INSERT INTO BankAccount(account_id, first_name,last_name, balance, atm_count)  VALUES(  %(account_id)s,  %(first_name)s,  %(last_name)s,  %(balance)s,  %(atm_count)s );
+ディクショナリ内のデータ: 
+{'account_id': '998877', 'first_name': 'Bill', 'last_name': 'Gates', 'balance': 88888888.34, 'atm_count': 54}
+クエリを実行しました。(1 row affected.)
+●クエリの実行(データの選択)
+実行するクエリ: SELECT account_id, first_name, last_name, balance, atm_count FROM BankAccount;
+クエリを実行しました。(9 row affected.)
+account_id       first_name      last_name       balance          atm_count
+1234567 ,        Jhon ,  von Neumann ,   9999.980 ,      55
+223344 ,         Stieve ,        Jobs ,  9999999.230 ,   24
+2795028 ,        Koichi ,        Hasegawa ,      24362.060 ,     5
+3141592 ,        Thomas ,        Edison ,        -279.670 ,      10
+43383 ,  Bell ,  Graham ,        693.010 ,       1
+653589793 ,      Nicola ,        Tesla ,         50288.450 ,     2
+84197169 ,       Carlos ,        Ghosn ,         314159265358.970 ,      6
+8462626 ,        Watt ,  James ,         41971.230 ,     3
+998877 ,         Bill ,  Gates ,         88888888.340 ,  54
+```
