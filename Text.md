@@ -242,15 +242,16 @@ Python から MariaDB のクエリを実行します。
 
 次のソースコードを作成し、実行してください。
 
-```python :select01.py
+```python
 #coding: utf-8
 
 import pymysql.cursors #PythonからDBを利用するためのモジュールを利用
 
+#select01.py
 #テーブルのデータを表示する
 
 def main():
-#DB サーバに接続する
+#DBサーバに接続する
 sql_connection = pymysql.connect(
     user='iot_user', #データベースにログインするユーザ名
     passwd='password',#データベースユーザのパスワード
@@ -281,14 +282,15 @@ Python から SQL サーバに接続し、クエリを実行してデータベ�
 データベースのデータを参照するだけで内容を変更しないクエリは、概ね下記のようなコードで実行できます。変更する箇所は、下記コードの四角で囲った部分です。
 なお、「データを参照するだけで内容を変更しない操作」を「副作用のない操作」ということもあります。
 
-```python :select02.py
+```python
 #coding: utf-8
 import pymysql.cursors #PythonからDBを利用するためのモジュールを利用
 
+#select02.py
 #テーブルのデータを表示する
 
 def main():
-#DB サーバに接続する
+#DBサーバに接続する
 sql_connection = pymysql.connect(
     user='iot_user', #データベースにログインするユーザ名
     passwd='password',#データベースユーザのパスワード
@@ -298,13 +300,12 @@ sql_connection = pymysql.connect(
 #cursor オブジェクトのインスタンスを生成
 sql_cursor = sql_connection.cursor()
 
-query = 'SELECT account_id, first_name, last_name, balance, atm_count FROM BankAccount WHERE atm_count
->= 5;' #クエリのコマンド
+query = 'SELECT account_id, first_name, last_name, balance, atm_count FROM BankAccount WHERE atm_count >= 5;' #クエリのコマンド
 sql_cursor.execute(query) #クエリを実行
 print(query, ' のクエリの結果\n')
 print( 'account_id \t', 'first_name \t', 'last_name \t', 'balance \t ','atm_count')
 
-#クエリを実行した結果得られたデータを 1 行ずつ表示する
+#クエリを実行した結果得られたデータを1行ずつ表示する
 for row in sql_cursor.fetchall():
     print( row[0], ',\t', row[1], ',\t', row[2], ',\t', row[3], ',\t', row[4])
 main()
@@ -335,7 +336,7 @@ SELECT account_id, first_name, last_name, balance, atm_count FROM ...
 
 1 行のデータを挿入することを考えます。クエリ文字列は下記のようになります。
 
-```db
+```sql
 INSERT INTO BankAccount(account_id, first_name, last_name, balance, atm_count)
 VALUES('1234567', 'Jhon', 'von Neumann', 9999.98, 55)
 ```
@@ -344,7 +345,7 @@ VALUES('1234567', 'Jhon', 'von Neumann', 9999.98, 55)
 
 挿入したデータを実際に反映させるには、commit()メソッドを実行する必要があります。
 
-```python
+```python :insert01.py
 sql_connection.commit()
 ```
 
@@ -352,7 +353,7 @@ sql_connection.commit()
 #coding: utf-8
 import pymysql.cursors #Python から DB を利用するためのモジュールを利用
 
-#insert01.py:
+#insert01.py
 #テーブルにデータを挿入する
 
 def main():
@@ -403,3 +404,180 @@ MariaDBにログインして、下記のように新しく追加するデータ�
 ```db
 MariaDB [practice]> DELETE FROM BankAccount WHERE account_id = '1234567';
 ```
+
+#### 4.3.2 クエリとデータを分離する方法 その１
+
+1 行のデータを挿入することを考えます。相当するクエリ文字列は下記のようになります。
+
+```sql
+INSERT INTO BankAccount(account_id, first_name, last_name, balance, atm_count)
+VALUES('223344', 'Stieve', 'Jobs', 9999999.23, 24);
+```
+
+次のプログラムは、上記クエリの"VALUES(…)"の部分を実際のデータではなく、"%s"のようなプレースホルダを指定し、後から実データを割り当てる方法を用いています。
+
+```sql
+INSERT INTO BankAccount(account_id, first_name, last_name, balance, atm_count)
+VALUES(%s, %s, %s, %s, %s);
+```
+
+プレースホルダで指定した値は、sql_cursor.execute()メソッドの引数に指定します。クエリとデータを分離します。
+ 
+```python
+result1 = sql_cursor.execute(query1,
+(new_account_id, new_first_name, new_last_name, new_balance, new_atm_count) )
+```
+
+コードは次のようになります。
+
+```python
+#coding: utf-8
+import pymysql.cursors #PythonからDBを利用するためのモジュールを利用
+
+#insert02.py 
+#テーブルにデータを挿入する#(データとクエリを分離）
+
+def main():
+#DB サーバに接続する
+sql_connection = pymysql.connect(
+    user='iot_user', #データベースにログインするユーザ名
+    passwd='password', #データベースユーザのパスワード
+    host='localhost', #接続先DBのホストorIPアドレス
+    db='practice'
+)
+#cursor オブジェクトのインスタンスを生成
+sql_cursor = sql_connection.cursor()
+
+#テーブルにデータを挿入する
+print('●クエリの実行(データの挿入)')
+
+#クエリを指定する。実データは後から指定する。
+query1 = "INSERT INTO BankAccount(account_id, first_name, last_name, balance, atm_count) " \ " VALUES(%s, %s, %s, %s, %s)";
+
+print('実行するクエリ: ' + query1)
+
+#挿入するデータを変数に格納
+new_account_id = '223344' new_first_name = 'Stieve' new_last_name = 'Jobs' new_balance = 9999999.23
+new_atm_count = 24
+
+#変数に格納されたデータを指定して挿入を実行する
+result1 = sql_cursor.execute( query1,(new_account_id,new_first_name, new_last_name,new_balance, new_atm_count) )
+
+#クエリを実行。変更した row の数が戻り値となる
+print('クエリを実行しました。('+ str(result1) +' row affected.)')
+
+#変更を実際に反映させる
+sql_connection.commit()
+
+#挿入したデータを含めてすべてのデータを表示
+print('●クエリの実行(データの選択)')
+query2 = 'SELECT account_id, first_name, last_name, balance, atm_count FROM BankAccount;' #クエリのコマンド
+
+print('実行するクエリ: ' + query2)
+result2 = sql_cursor.execute(query2) #クエリを実行。取得したrowが戻り値となる
+
+print('クエリを実行しました。('+ str(result2) +' row affected.)')
+ 
+print( 'account_id \t', 'first_name \t', 'last_name \t', 'balance \t ','atm_count') #クエリを実行した結果得られたデータを1行ずつ表示する
+
+for row in sql_cursor.fetchall():
+    print( row[0], ',\t', row[1], ',\t', row[2], ',\t', row[3], ',\t', row[4])
+main()
+```
+
+実行結果は次のようになります。
+
+#### 4.3.3 クエリとデータを分離する方法 その２
+
+クエリにプレースホルダを設定し、実データはディクショナリ形式で指定します。 ディクショナリ形式でのデータの指定に備えて、プレースホルダにキー名を指定します。ここで指定するキー名は、ディクショナリでのキー名と一致する必要があります。
+
+```sql
+INSERT INTO BankAccount(account_id, first_name, last_name, balance, atm_count)
+VALUES(%(account_id)s, %(first_name)s, %(last_name)s, %(balance)s, %(atm_count)s );
+```
+
+ディクショナリ形式でのデータの指定は、次のように行います。
+
+```python
+new_row = {
+    'account_id' : '998877'
+    'first_name' : 'Bill'
+    'last_name' : 'Gates'
+    'balance' : 88888888.34,
+    'atm_count' : 54
+}
+```
+
+execute()メソッドの引数に、クエリ文字列とディクショナリ変数を指定します。
+
+```python
+result1 = sql_cursor.execute(query1, new_row)
+```
+
+コードは次のようになります。
+
+```python :
+#coding: utf-8
+import pymysql.cursors #Python から DB を利用するためのモジュールを利用
+
+#insert03.py:
+#テーブルにデータを挿入する
+#(データをディクショナリ形式で指定）
+
+def main():
+#DB サーバに接続する
+sql_connection = pymysql.connect(
+user='iot_user', #データベースにログインするユーザ名passwd='password',#データベースユーザのパスワードhost='localhost', #接続先 DB のホスト orIP アドレスdb='practice'
+)
+
+#cursor オブジェクトのインスタンスを生成
+sql_cursor = sql_connection.cursor()
+
+#テーブルにデータを挿入する print('●クエリの実行(データの挿入)')
+
+#クエリを指定する。実データは後から指定する。
+#実データはディクショナリ形式とするため、ブレースホルダにキー名を指定する
+query1 = "INSERT INTO BankAccount(account_id, first_name,last_name, balance, atm_count)VALUES(" \ "%(account_id)s, " \
+"%(first_name)s, " \ "%(last_name)s, " \ "%(balance)s, " \
+"%(atm_count)s );"
+
+
+print('実行するクエリ: ' + query1)
+
+#挿入するデータをディクショナリ変数に格納
+new_row = {
+    'account_id' : '998877',
+    'first_name' : 'Bill' ,
+    'last_name' : 'Gates'
+    'balance' : 88888888.34,
+    'atm_count' : 54
+}
+
+print('ディクショナリ内のデータ: ') print(new_row)
+
+#ディクショナリ変数に格納されたデータを指定して挿入を実行する
+result1 = sql_cursor.execut(query1, new_row)
+
+#クエリを実行。変更したrowの数が戻り値となる
+print('クエリを実行しました。('+ str(result1) +' row affected.)')
+
+#変更を実際に反映させる
+sql_connection.commit()
+
+#挿入したデータを含めてすべてのデータを表示
+print('●クエリの実行(データの選択)')
+query2 = 'SELECT account_id, first_name, last_name, balance, atm_count FROM BankAccount;' #クエリのコマンド
+
+print('実行するクエリ: ' + query2)
+result2 = sql_cursor.execute(query2) #クエリを実行。取得したrowが戻り値となる
+
+print('クエリを実行しました。('+ str(result2) +' row affected.)')
+
+
+print( 'account_id \t', 'first_name \t', 'last_name \t', 'balance \t ','atm_count') #クエリを実行した結果得られたデータを1行ずつ表示する
+for row in sql_cursor.fetchall():
+    print( row[0], ',\t', row[1], ',\t', row[2], ',\t', row[3], ',\t', row[4])
+main()
+```
+
+実行結果は次のようになります。
