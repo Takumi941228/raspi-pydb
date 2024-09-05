@@ -230,27 +230,27 @@ MariaDB [practice]> show fields from BankAccount;
 文字列データは ' ' (シングルクオート) で囲みます。数値データはそのまま入力します
 
 ```sql
-INSERT INTO BankAccount(account_id,first_name, last_name, balance, atm_count) VALUES('3141592', 'Thomas', 'Edison', -279.67, 10);
+MariaDB [practice]> INSERT INTO BankAccount(account_id,first_name, last_name, balance, atm_count) VALUES('3141592', 'Thomas', 'Edison', -279.67, 10);
 ```
 
 ```sql
-INSERT INTO BankAccount(account_id,first_name, last_name, balance, atm_count) VALUES('653589793', 'Nicola', 'Tesla', 50288.45, 2);
+MariaDB [practice]> INSERT INTO BankAccount(account_id,first_name, last_name, balance, atm_count) VALUES('653589793', 'Nicola', 'Tesla', 50288.45, 2);
 ```
 
 ```sql
-INSERT INTO BankAccount(account_id,first_name, last_name, balance, atm_count) VALUES('8462626', 'Watt', 'James', 41971.23, 3);
+MariaDB [practice]> INSERT INTO BankAccount(account_id,first_name, last_name, balance, atm_count) VALUES('8462626', 'Watt', 'James', 41971.23, 3);
 ```
 
 ```sql
-INSERT INTO BankAccount(account_id,first_name, last_name, balance, atm_count) VALUES('43383', 'Bell', 'Graham', 693.01, 1);
+MariaDB [practice]> INSERT INTO BankAccount(account_id,first_name, last_name, balance, atm_count) VALUES('43383', 'Bell', 'Graham', 693.01, 1);
 ```
 
 ```sql
-INSERT INTO BankAccount(account_id,first_name, last_name, balance, atm_count) VALUES('84197169', 'Carlos', 'Ghosn',314159265358.97, 6);
+MariaDB [practice]> INSERT INTO BankAccount(account_id,first_name, last_name, balance, atm_count) VALUES('84197169', 'Carlos', 'Ghosn',314159265358.97, 6);
 ```
 
 ```sql
-INSERT INTO BankAccount(account_id,first_name, last_name, balance, atm_count) VALUES('2795028', 'Koichi', 'Hasegawa', 24362.06, 5);
+MariaDB [practice]> INSERT INTO BankAccount(account_id,first_name, last_name, balance, atm_count) VALUES('2795028', 'Koichi', 'Hasegawa', 24362.06, 5);
 ```
 
 ### 3.1　データの確認
@@ -312,7 +312,7 @@ types-PyMySQL                      1.0
 
 PyMySQL モジュールについては、下記の URL より情報を収集することができます。
 
-[PyMySQL documentation](https://pymysql.readthedocs.io/en/latest/index.html "Qiita Home")
+[PyMySQL documentation](https://pymysql.readthedocs.io/en/latest/index.html)
 
 ### 4.1 クエリの実行
 
@@ -743,3 +743,98 @@ account_id       first_name      last_name       balance          atm_count
 8462626 ,        Watt ,  James ,         41971.230 ,     3
 998877 ,         Bill ,  Gates ,         88888888.340 ,  54
 ```
+
+### 4.4 外部からのデータ入力
+
+実際のデータベース操作では、入力するデータを外部から受け取る必要があります。キーボードやWEB の入力フォームをはじめ、外部からデータを入力する方法はいくつか存在します。データの受取の方法は場合によって様々ですが、受け取り後に注意をしてデータを取り扱う必要があります。
+外部から受け取ったデータをそのまま適用すると、思わぬ不具合や脆弱性を持つこともあります。
+
+#### 4.4.1 外部から受け取ったデータをそのまま反映する
+
+外部から受け取ったデータを、そのままクエリに反映する方法を用います。１件分のデータをキーボードから入力します。
+入力するデータは次のものを想定しています。
+
+```bash
+■データを入力してください。account_id: 987987 first_name: Linus last_name: Tovalds
+balance: 6666666.66
+atm_count: 26
+```
+
+データの入力には"input()"メソッドを使用します。引数には、入力を催すために表示する文字列を指定します。入力した文字列は変数に格納されます。
+
+```python
+new_account_id = input('account_id: ') new_first_name = input('first_name: ') new_last_name = input('last_name: ') new_balance = input('balance: ')
+new_atm_count = input('atm_count: ')
+```
+
+input()メソッドの使い方については、下記 WEB サイトに詳しい解説があります。
+
+[Python documentation](https://docs.python.org/ja/3/library/functions.html#input)
+
+下記に input()メソッドの解説を抜粋します。
+
+引数 prompt が存在すれば、それが末尾の改行を除いて標準出力に書き出されます。次に、この関数は入力から 1 行を読み込み、文字列に変換して (末尾の改行を除いて) 返します。 EOF が読み込まれたとき、 EOFError が送出されます。
+
+入力したデータをクエリに展開します。入力したデータを文字列に展開するには、"f 文字列"を使用します。 f"… {変数名} …"のように記述すると、{変数名}の部分にその変数の内容が展開されます。たとえば、次のように利用します。
+
+```python
+f"INSERT INTO BankAccount(account_id, first_name, last_name, balance, atm_count)
+VALUES('{new_account_id}', '{new_first_name}', '{new_last_name}', {new_balance}, {new_atm_count})"
+```
+
+入力した内容が展開されると、次のような文字列となります。
+
+<code>INSERT INTO BankAccount(account_id, first_name,last_name, balance, atm_count) VALUES('987987', 'Linus', 'Tovalds', 6666666.66, 26)</code>
+
+使用するコードは次のとおりです。
+
+```python
+#coding: utf-8 import sys
+import pymysql.cursors #Python から DB を利用するためのモジュールを利用
+
+#input01.py:
+#ユーザが入力したデータをテーブルに挿入する#(クエリの中にデータを直接展開）)
+
+def main():
+    #DB サーバに接続する
+    sql_connection = pymysql.connect(
+    user='iot_user', #データベースにログインするユーザ名passwd='password',#データベースユーザのパスワードhost='localhost', #接続先 DB のホスト orIP アドレスdb='practice'
+    )
+    #cursor オブジェクトのインスタンスを生成
+    sql_cursor = sql_connection.cursor()
+
+    #テーブルにデータを挿入する   print('■データを入力してください'); new_account_id = input('account_id: ') new_first_name = input('first_name: ') new_last_name = input('last_name: ')
+
+    new_balance = input('balance: ') new_atm_count = input('atm_count: ')
+
+    print('●クエリの実行(データの挿入)')
+
+    query1 = 'INSERT INTO BankAccount(account_id, first_name, last_name, balance, atm_count) ' \
+    f"	VALUES('{new_account_id}',	'{new_first_name}',	'{new_last_name}',	{new_balance},
+    {new_atm_count})";
+
+    print('実行するクエリ: ' + query1)
+
+    result1 = sql_cursor.execute(query1) #クエリを実行。変更した row の数が戻り値となる
+    print('クエリを実行しました。('+ str(result1) +' row affected.)')
+
+    #変更を実際に反映させるsql_connection.commit()
+
+
+    #挿入したデータを含めてすべてのデータを表示print('●クエリの実行(データの選択)')
+    query2 = 'SELECT account_id, first_name, last_name, balance, atm_count FROM BankAccount;' #クエリのコマンド
+
+
+    print('実行するクエリ: ' + query2)
+    result2 = sql_cursor.execute(query2) #クエリを実行。取得した row が戻り値となる
+
+    print('クエリを実行しました。('+ str(result2) +' row affected.)')
+
+
+    print( 'account_id \t', 'first_name \t', 'last_name \t', 'balance \t ','atm_count') #クエリを実行した結果得られたデータを 1 行ずつ表示する
+    for row in sql_cursor.fetchall():
+    print( row[0], ',\t', row[1], ',\t', row[2], ',\t', row[3], ',\t', row[4])
+main()
+```
+
+実行結果は次のようになります。
