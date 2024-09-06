@@ -411,3 +411,49 @@ def setup():
 ```bash
 温度: 27.65 ℃, 湿度: 49.01 %, 気圧: 997.62 hPa
 ```
+
+#### 5.3.2 継続的な測定
+
+継続的に測定を行うプログラムを考えます。10 秒毎に測定を行いデータを表示するプログラムを作成します。
+
+```python
+#coding: utf-8
+
+#モジュールをインポート
+import bme280mod #BME280センサ関連を取扱う
+import time      #時間を取扱う
+import datetime  #日付と時刻を取扱う
+
+def main():
+    #モジュール内に定義されているメソッドを呼び出す
+    bme280mod.init() #BME280センサを初期化
+
+    print('測定時間[YYYY-MM-DD HH:MM:SS], 温度[℃], 湿度[%], 気圧[hPa]')
+
+    while True:
+        bme280mod.read_data() #測定
+        data = bme280mod.get_data() #データを取得
+
+        temp = data['temperature']
+        hum = data['humidity']
+        press = data['pressure']
+
+        datetime_now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        print(f'{datetime_now},    {temp:.2f},    {hum:.2f},    {press:.2f}')
+
+        time.sleep(10)
+main()
+```
+
+実行結果は次のようになります。
+
+```bash
+測定時間[YYYY-MM-DD HH:MM:SS], 温度[℃], 湿度[%], 気圧[hPa]
+2024-09-06 20:03:00,    27.26,    49.66,    998.24
+2024-09-06 20:03:10,    27.26,    49.73,    998.27
+2024-09-06 20:03:20,    27.28,    49.84,    998.25
+2024-09-06 20:03:30,    27.26,    50.04,    998.16
+2024-09-06 20:03:40,    27.27,    50.13,    998.21
+2024-09-06 20:03:50,    27.28,    50.29,    998.28
+```
