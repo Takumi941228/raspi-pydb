@@ -1,5 +1,4 @@
-
-
+# Raspberry Piを活用したデータ処理とグラフの表示
 
 ## 4. MariaDBとPythonの連携
 
