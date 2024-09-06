@@ -257,9 +257,6 @@ MariaDB [practice]> INSERT INTO BankAccount(account_id,first_name, last_name, ba
 
 ```sql
 MariaDB [practice]> SELECT * FROM BankAccount;
-```
-
-```bash
 +------------+------------+-----------+------------------+-----------+
 | account_id | first_name | last_name | balance          | atm_count |
 +------------+------------+-----------+------------------+-----------+
@@ -785,25 +782,25 @@ def main():
     sql_cursor = sql_connection.cursor()
 
     #テーブルにデータを挿入する
-    print('■データを入力してください');
-    new_account_id = input('account_id: ') new_first_name = input('first_name: ') 
+    print('■データを入力してください')
+    new_account_id = input('account_id: ') 
+    new_first_name = input('first_name: ') 
     new_last_name = input('last_name: ')
-
     new_balance = input('balance: ')
     new_atm_count = input('atm_count: ')
 
     print('●クエリの実行(データの挿入)')
 
     query1 = 'INSERT INTO BankAccount(account_id,first_name, last_name, balance, atm_count) ' \
-    f" VALUES('{new_account_id}', '{new_first_name}','{new_last_name}', {new_balance}, {new_atm_count})";
+            f" VALUES('{new_account_id}', '{new_first_name}','{new_last_name}', {new_balance}, {new_atm_count})";
 
     print('実行するクエリ: ' + query1)
 
     result1 = sql_cursor.execute(query1) #クエリを実行。変更した row の数が戻り値となる
     print('クエリを実行しました。('+ str(result1) +' row affected.)')
 
-    #変更を実際に反映させるsql_connection.commit()
-
+    #変更を実際に反映させる
+    sql_connection.commit()
 
     #挿入したデータを含めてすべてのデータを表示print('●クエリの実行(データの選択)')
     query2 = 'SELECT account_id, first_name, last_name, balance, atm_count FROM BankAccount;' #クエリのコマンド
@@ -817,7 +814,7 @@ def main():
 
     print( 'account_id \t', 'first_name \t', 'last_name \t', 'balance \t ','atm_count') #クエリを実行した結果得られたデータを 1 行ずつ表示する
     for row in sql_cursor.fetchall():
-    print( row[0], ',\t', row[1], ',\t', row[2], ',\t', row[3], ',\t', row[4])
+        print( row[0], ',\t', row[1], ',\t', row[2], ',\t', row[3], ',\t', row[4])
 main()
 ```
 
@@ -854,12 +851,15 @@ SQL インジェクションとは、入力欄に SQL コマンドを巧妙に�
 例えば、悪意のあるユーザが「名前」の欄に SQL コマンドを混入させて、全く関係のない他のユーザの登録情報を書き換える事も考えられます。
 このシステムの例では、"account_id"の入力欄に下記のコマンドを入力すると、意図しないデータの書き換えが行われてしまいます。
 
-<code>3141592','','',0,0) ON DUPLICATE KEY UPDATE first_name = '怪盗ルパン';</code>
+<code>3141592','','',0,0) ON DUPLICATE KEY UPDATE first_name = '怪盗ルパン'; #</code>
 
 実験の前に、MariaDB にログインして元のデータを確認しておきましょう。
 
 ```sql
 MariaDB [practice]> SELECT * FROM BankAccount;
+```
+
+```bash
 +------------+------------+-------------+------------------+-----------+
 | account_id | first_name | last_name   | balance          | atm_count |
 +------------+------------+-------------+------------------+-----------+
@@ -967,15 +967,16 @@ def main():
 
     #テーブルにデータを挿入する
     print('■データを入力してください')
-    new_account_id = input('account_id: ') new_first_name = input('first_name: ')
+    new_account_id = input('account_id: ')
+    new_first_name = input('first_name: ')
     new_last_name = input('last_name: ')
     new_balance = input('balance: ')
     new_atm_count = input('atm_count: ')
 
     print('●クエリの実行(データの挿入)')
 
-    query1 = 'INSERT INTO BankAccount(account_id, first_name, last_name, balance, atm_count) ' \ 
-            ' VALUES(%s, %s, %s, %s, %s)';
+    query1 = 'INSERT INTO BankAccount(account_id, first_name, last_name, balance, atm_count) ' \
+                ' VALUES(%s, %s, %s, %s, %s)';
 
     print('実行するクエリ: ' + query1)
     
@@ -1000,7 +1001,7 @@ def main():
     print( 'account_id \t', 'first_name \t', 'last_name \t', 'balance \t ','atm_count') #クエリを実行した結果得られたデータを 1行ずつ表示する
     for row in sql_cursor.fetchall():
         print( row[0], ',\t', row[1], ',\t', row[2], ',\t', row[3], ',\t', row[4])
-main() 
+main()
 ```
 
 正常なデータを登録した場合の実行結果は次のようになります。
@@ -1127,5 +1128,3 @@ MariaDB [practice]> SELECT * FROM BankAccount;
 
 例外が発生しプログラムが停止してしまいましたが、データベースの内容は変更されていません。例外の発生は、例外をキャッチすれば見かけ上は問題がないようにプログラムが振舞うこともできます。
 このような対策は、不正な入力からシステムを守ることに役立ちます。
-
-
