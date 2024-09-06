@@ -1,5 +1,6 @@
 # Raspberry Piを活用したデータ処理とグラフの表示
 
+
 ## 2. 開発環境のインストールと設定
 
 ### 2.1 Pythonの開発環境
@@ -29,3 +30,7 @@ pi@raspberrypi:~ $ sudo apt -y install python3-pymysql
 ```bash
 pi@raspberrypi:~ $ sudo apt -y install mariadb-server
 ```
+
+### 2.3 RaspberryPi の設定
+
+RaspberryPi のメニューより「RaspberryPi の設定」を開き、インターフェースのタブより"I2C" の項目を「有効」にして"OK"を押します。この設定で I2C が有効になります。
