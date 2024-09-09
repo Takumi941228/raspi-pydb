@@ -457,3 +457,159 @@ main()
 2024-09-06 20:03:40,    27.27,    50.13,    998.21
 2024-09-06 20:03:50,    27.28,    50.29,    998.28
 ```
+
+### 5.4 データの蓄積
+
+MariaDB にデータを格納し、測定したデータを蓄積します。
+
+#### 5.4.1 データベースとテーブルの設計
+
+#### データベースの新規作成
+
+いままではデータベース"practice"を使っていましたが、新たに別のデータベースを使用しましょう。新しいデータベースの名前は"iot_storage"とします。
+
+| データベース名 | iot_storage |
+
+データベースを作成します。mariadb に root ユーザとしてログインして作業します。
+
+```bash
+pi@raspberrypi:~ $ sudo mariadb -u root
+```
+
+MariaDB にログインしたら、データベースを作成します。
+
+```sql
+MariaDB [(none)]> CREATE DATABASE iot_storage CHARACTER SET utf8mb4;
+Query OK, 1 row affected (0.001 sec)
+```
+
+データベースが作成されたか、確認をおこないます。
+
+```sql
+MariaDB [(none)]> SHOW DATABASEs;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| iot_storage        |
+| mysql              |
+| performance_schema |
+| practice           |
+| sys                |
++--------------------+
+6 rows in set (0.001 sec)
+```
+
+データベースに対してアクセス権を付与します。`iot_admin`にはすべての操作権限を、`iot_user`は限られた操作権限を付与します。
+
+```sql
+MariaDB [(none)]> GRANT select, update, insert, delete ON iot_storage.* TO 'iot_user'@'localhost'; 
+Query OK, 0 rows affected (0.572 sec)
+```
+
+```sql
+MariaDB [(none)]> use iot_storage;
+Database changed
+```
+
+#### データを蓄積するテーブルの設計
+
+テーブルはどのような構造にするかを考えていきます。
+まず、取扱うデータの項目を考えます。取扱うデータの項目は、少なくとも「温度」「湿度」「気圧」です。そのほかには、それらのデータを取得した「日付と時刻」が必要です。さらに、「どのノードが測定したのか」というデータも必要です。
+主キーはこれらのデータの他に整数型の重複しない番号を割り当てることにします。
+
+| テーブル名 | Ambient |
+
+| 内容 | カラム名 | データ型 | 制約 |
+| --- | --- | --- | --- |
+| 主キー | row_id | INT | PRIMARY KEY NOT NULL AUTO_INCREMENT |
+| 取得した日付と時刻 | timestamp | TIMESTAMP | ^ |
+| 取得したノードの識別子 | identifier | CHAR(24) | ^ |
+| 温度 | temperature | DOUBLE | ^ |
+| 湿度 | humidity | DOUBLE | ^ |
+| 気圧 | pressure | DOUBLE | ^ |
+
+主キーは重複しない値を割り当てる必要があります。MariaDB には、INT 型(整数)の値を順番に割り当てる機能がありますので、これを利用します。
+「取得したノードの識別子」は、一連の測定システムの中で、それを測定した機器を特定できる識別子である必要があります。例えば、MAC アドレスなどがあります。今回は"hyogo_iot_001"のような文字列とします。
+「取得した日付と時刻」は、データを取得した日付と時刻を示します。データベース上で日付を扱うときには、タイムゾーン（時差）を考慮する必要があります。日本のタイムゾーンは"JST"と表され、協定世界時(UTC)より+9 時間進んだ時刻です。
+
+MariaDB に設定されているタイムゾーンを確認するには、下記のコマンドを利用します。
+
+```sql
+MariaDB [iot_storage]> SELECT @@system_time_zone;
++--------------------+
+| @@system_time_zone |
++--------------------+
+| JST                |
++--------------------+
+1 row in set (0.000 sec)
+```
+
+テーブルを作成します。
+
+```sql
+MariaDB [iot_storage]> CREATE TABLE Ambient(
+    -> row_id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    -> timestamp TIMESTAMP,
+    -> identifier CHAR(17),
+    -> temperature DOUBLE,
+    -> humidity DOUBLE,
+    -> pressure DOUBLE );
+Query OK, 0 rows affected (0.498 sec)
+```
+
+作成したテーブルを確認します。
+
+```sql
+MariaDB [iot_storage]> SHOW TABLES;
++-----------------------+
+| Tables_in_iot_storage |
++-----------------------+
+| Ambient               |
++-----------------------+
+1 row in set (0.001 sec)
+```
+
+テーブルの内容を確認します。
+
+```sql
+MariaDB [iot_storage]>  SHOW COLUMNS FROM Ambient;
++-------------+-----------+------+-----+---------+----------------+
+| Field       | Type      | Null | Key | Default | Extra          |
++-------------+-----------+------+-----+---------+----------------+
+| row_id      | int(11)   | NO   | PRI | NULL    | auto_increment |
+| timestamp   | timestamp | YES  |     | NULL    |                |
+| identifier  | char(17)  | YES  |     | NULL    |                |
+| temperature | double    | YES  |     | NULL    |                |
+| humidity    | double    | YES  |     | NULL    |                |
+| pressure    | double    | YES  |     | NULL    |                |
++-------------+-----------+------+-----+---------+----------------+
+6 rows in set (0.002 sec)
+```
+
+テーブルが作成できたら、一旦 MariaDB をログアウトして、より権限の低い`iot_user`でログインし直しましょう。テーブルの作成ができたのであれば、高い権限でログインしている必要はありません。
+
+```sql
+MariaDB [iot_storage]> exit
+Bye```
+
+```bash
+pi@raspberrypi:~/python_sql $ sudo mariadb -u iot_user -p
+```
+
+```sql
+MariaDB [(none)]> use iot_storage;
+```
+
+#### 5.4.2 データ追加のテスト
+
+テーブルが作成できましたので、データ追加のテストを行います。まず最初に、登録されているデータを確認します。
+
+```sql
+MariaDB [iot_storage]> SELECT * FROM Ambient;
+Empty set (0.001 sec)
+```
+
+データがまだ何も登録されていない場合は、`Empty set` と表示されます。
+データをテスト追加するにあたって、以前作成した"bme280_cyclic01.py" で測定した実際の測定値を利用してみましょう。
+プログラムを実行すると、次のように表示されます。
