@@ -2,20 +2,20 @@
 
 ## 5. データの継続的な取得と蓄積
 
-MariaDB と Python を使って、データを継続的に蓄積するシステムを構築します。
-本書では、温度・湿度・気圧センサである BME280 を使用してこれらのデータを取得し、蓄積することを考えます。
+MariaDBとPythonを使って、データを継続的に蓄積するシステムを構築します。
+本書では、温度・湿度・気圧センサであるBME280を使用してこれらのデータを取得し、蓄積することを考えます。
 
 ### 5.1 BME280の接続と使用
 
-RaspberryPi に BME280 を接続します。BME280 は、I2C で接続します。
+RaspberryPiにBME280を接続します。BME280は、I2Cで接続します。
 
 #### 5.1.1 配線
 
-RaspberryPi と BME280 センサは、次のように配線します。BME280 側の SCK と SDI 端子は 10kΩの抵抗でプルアップします。下記の配線図と RaspberryPi ピン配置を参考に、配線してください。
+RaspberryPiとBME280センサは、次のように配線します。下記の配線図とRaspberryPiピン配置を参考に、配線してください。
 
 #### 5.1.2 I2Cの確認
 
-コマンド"i2cdetect"を使って、I2C バスに接続されている機器を一覧します。接続されている機器のアドレスが一覧されます。BME280 のアドレスは"76"なので、下記のように表示されます。
+コマンド`i2cdetect`を使って、I2Cバスに接続されている機器を一覧します。接続されている機器のアドレスが一覧されます。BME280のアドレスは`76`なので、下記のように表示されます。
 
 ```bash
 pi@raspberrypi:~ $ i2cdetect -y 1
@@ -35,7 +35,7 @@ pi@raspberrypi:~ $ i2cdetect -y 1
 
 #### 5.1.3 ライブラリのインストール
 
-I2C 通信を簡単に取扱うためのライブラリ"smbus2"をインストールします。
+I2C 通信を簡単に取扱うためのライブラリ`smbus2`をインストールします。
 
 ```bash
 pi@raspberrypi:~ $ sudo apt -y install python3-smbus2
@@ -47,18 +47,16 @@ pi@raspberrypi:~ $ pip list | grep smbus2
 
 ### 5.2 データの取得
 
-BME280 センサから I2C バス経由で温度・湿度・気圧データを読み込みます。Arduino でこのセンサを用いたときと同様に、このプログラムは非常に複雑になります。
-下記で配布されているサンプルプログラムを参考にして、データの取得をおこないます。
+BME280センサからI2Cバス経由で温度・湿度・気圧データを読み込みます。このプログラムは非常に複雑になります。なので、下記で配布されているサンプルプログラムを参考にして、データの取得をおこないます。
 
 [GitHub Switch Science](https://github.com/SWITCHSCIENCE/samplecodes/blob/master/BME280/Python27/bme280_sample.py)
 
 プログラムは下記のとおりです。
 
+`bme280_read01.py`
+
 ```python
 #coding: utf-8
-
-#bme280_read01.py
-#BME280から温湿度・気圧データを取得する
 
 from smbus2 import SMBus
 import time
@@ -219,11 +217,10 @@ hum :  51.99 ％
 
 作成したモジュールは、`impprt …`を利用して呼び出すことができます。
 
+`bme280_read02.py`
+
 ```python
 #coding: utf-8
-
-#bme280_read02.py
-#モジュール化を行う
 
 #モジュールをインポート
 import bme280mod
@@ -243,10 +240,10 @@ def main():
 main()
 ```
 
+`bme280mod.py`
+
 ```python
 #coding: utf-8
-
-#bme280mod.py:BME280 を簡単に取扱うためのモジュール
 
 from smbus2 import SMBus
 import time
@@ -416,6 +413,8 @@ def setup():
 
 継続的に測定を行うプログラムを考えます。10 秒毎に測定を行いデータを表示するプログラムを作成します。
 
+`bme280_cyclic01.py`
+
 ```python
 #coding: utf-8
 
@@ -460,23 +459,21 @@ main()
 
 ### 5.4 データの蓄積
 
-MariaDB にデータを格納し、測定したデータを蓄積します。
+MariaDBにデータを格納し、測定したデータを蓄積します。
 
-#### 5.4.1 データベースとテーブルの設計
+#### 5.4.1 データベースの新規作成
 
-#### データベースの新規作成
+いままではデータベース`practice`を使っていましたが、新たに別のデータベースを使用しましょう。新しいデータベースの名前は`iot_storage`とします。
 
-いままではデータベース"practice"を使っていましたが、新たに別のデータベースを使用しましょう。新しいデータベースの名前は"iot_storage"とします。
+* データベース名：iot_storage
 
-| データベース名 | iot_storage |
-
-データベースを作成します。mariadb に root ユーザとしてログインして作業します。
+データベースを作成します。mariadbにrootユーザとしてログインして作業します。
 
 ```bash
 pi@raspberrypi:~ $ sudo mariadb -u root
 ```
 
-MariaDB にログインしたら、データベースを作成します。
+MariaDBにログインしたら、データベースを作成します。
 
 ```sql
 MariaDB [(none)]> CREATE DATABASE iot_storage CHARACTER SET utf8mb4;
@@ -508,33 +505,37 @@ Query OK, 0 rows affected (0.572 sec)
 ```
 
 ```sql
+MariaDB [(none)]> GRANT ALL PRIVILEGES ON iot_storage.* TO 'iot_admin'@'localhost';
+```
+
+#### 5.4.2 データベースの選択
+
+```sql
 MariaDB [(none)]> use iot_storage;
+```
+
+```sql
 Database changed
 ```
 
-#### データを蓄積するテーブルの設計
+#### 5.4.3 データを蓄積するテーブルの設計
 
-テーブルはどのような構造にするかを考えていきます。
-まず、取扱うデータの項目を考えます。取扱うデータの項目は、少なくとも「温度」「湿度」「気圧」です。そのほかには、それらのデータを取得した「日付と時刻」が必要です。さらに、「どのノードが測定したのか」というデータも必要です。
-主キーはこれらのデータの他に整数型の重複しない番号を割り当てることにします。
+テーブルはどのような構造にするかを考えていきます。まず、取扱うデータの項目を考えます。取扱うデータの項目は、少なくとも「温度」「湿度」「気圧」です。そのほかには、それらのデータを取得した「日付と時刻」が必要です。さらに、「どのノードが測定したのか」というデータも必要です。主キーはこれらのデータの他に整数型の重複しない番号を割り当てることにします。
 
-| テーブル名 | Ambient |
-| --- | --- |
+* テーブル名：Ambient
 
 | 内容 | カラム名 | データ型 | 制約 |
 | --- | --- | --- | --- |
 | 主キー | row_id | INT | PRIMARY KEY NOT NULL AUTO_INCREMENT |
-| 取得した日付と時刻 | timestamp | TIMESTAMP | ^ |
-| 取得したノードの識別子 | identifier | CHAR(24) | ^ |
-| 温度 | temperature | DOUBLE | ^ |
-| 湿度 | humidity | DOUBLE | ^ |
-| 気圧 | pressure | DOUBLE | ^ |
+| 取得した日付と時刻 | timestamp | TIMESTAMP | - |
+| 取得したノードの識別子 | identifier | CHAR(24) | - |
+| 温度 | temperature | DOUBLE | - |
+| 湿度 | humidity | DOUBLE | - |
+| 気圧 | pressure | DOUBLE | - |
 
-主キーは重複しない値を割り当てる必要があります。MariaDB には、INT 型(整数)の値を順番に割り当てる機能がありますので、これを利用します。
-「取得したノードの識別子」は、一連の測定システムの中で、それを測定した機器を特定できる識別子である必要があります。例えば、MAC アドレスなどがあります。今回は"hyogo_iot_001"のような文字列とします。
-「取得した日付と時刻」は、データを取得した日付と時刻を示します。データベース上で日付を扱うときには、タイムゾーン（時差）を考慮する必要があります。日本のタイムゾーンは"JST"と表され、協定世界時(UTC)より+9 時間進んだ時刻です。
+主キーは重複しない値を割り当てる必要があります。MariaDBには、INT型(整数)の値を順番に割り当てる機能がありますので、これを利用します。「取得したノードの識別子」は、一連の測定システムの中で、それを測定した機器を特定できる識別子である必要があります。例えば、MACアドレスなどがあります。今回は`tochigi_iot_001`のような文字列とします。「取得した日付と時刻」は、データを取得した日付と時刻を示します。データベース上で日付を扱うときには、タイムゾーン（時差）を考慮する必要があります。日本のタイムゾーンは"JST"と表され、協定世界時(UTC)より+9時間進んだ時刻です。
 
-MariaDB に設定されているタイムゾーンを確認するには、下記のコマンドを利用します。
+MariaDBに設定されているタイムゾーンを確認するには、下記のコマンドを利用します。
 
 ```sql
 MariaDB [iot_storage]> SELECT @@system_time_zone;
@@ -588,11 +589,12 @@ MariaDB [iot_storage]>  SHOW COLUMNS FROM Ambient;
 6 rows in set (0.002 sec)
 ```
 
-テーブルが作成できたら、一旦 MariaDB をログアウトして、より権限の低い`iot_user`でログインし直しましょう。テーブルの作成ができたのであれば、高い権限でログインしている必要はありません。
+テーブルが作成できたら、一旦 MariaDBをログアウトして、より権限の低い`iot_user`でログインし直しましょう。テーブルの作成ができたのであれば、高い権限でログインしている必要はありません。
 
 ```sql
 MariaDB [iot_storage]> exit
-Bye```
+Bye
+```
 
 ```bash
 pi@raspberrypi:~/python_sql $ sudo mariadb -u iot_user -p
@@ -602,7 +604,7 @@ pi@raspberrypi:~/python_sql $ sudo mariadb -u iot_user -p
 MariaDB [(none)]> use iot_storage;
 ```
 
-#### 5.4.2 データ追加のテスト
+#### 5.4.4 データ追加のテスト
 
 テーブルが作成できましたので、データ追加のテストを行います。まず最初に、登録されているデータを確認します。
 
@@ -638,10 +640,12 @@ MariaDB [iot_storage]> SELECT * FROM Ambient;
 1 row in set (0.001 sec)
 ```
 
-#### 5.4.3 プログラムからのデータ追加　その１
+#### 5.4.5 プログラムからのデータ追加　その１
 
 センサからのデータ測定が可能となり、データベースの準備もできています。測定したデータをデータベースに挿入するプログラムを考えていきます。
 ※センサからのデータの取得には、以前作成した`bme280mod.py`を使用します。
+
+`bme280_insert01.py`
 
 ```python
 #coding: utf-8
@@ -651,7 +655,6 @@ import bme280mod #BME280センサ関連を取扱う
 import time      #時間を取扱う
 import datetime  #日付と時刻を取扱う
 import pymysql.cursors #PythonからDBを取扱う
-
 
 #このノードを識別するID
 NODE_IDENTIFIER = 'tochigi_iot_999';
@@ -710,7 +713,7 @@ main()
 クエリを実行しました。(1 row affected.)
 ```
 
-MariaDB にログインして、追加されたデータを確認してください。
+MariaDBにログインして、追加されたデータを確認してください。
 
 ```sql
 MariaDB [iot_storage]> SELECT * FROM Ambient;
@@ -723,9 +726,11 @@ MariaDB [iot_storage]> SELECT * FROM Ambient;
 2 rows in set (0.001 sec)
 ```
 
-#### 5.4.4 プログラムからのデータ追加　その２
+#### 5.4.6 プログラムからのデータ追加　その２
 
 追加するデータを一つのディクショナリ形式にまとめたコードを考えてみます。
+
+`bme280_insert02.py`
 
 ```python
 #coding: utf-8
@@ -735,7 +740,6 @@ import bme280mod       #BME280センサ関連を取扱う
 import time            #時間を取扱う
 import datetime        #日付と時刻を取扱う
 import pymysql.cursors #PythonからDBを取扱う
-
 
 #このノードを識別するID
 NODE_IDENTIFIER = 'tochigi_iot_999';
@@ -801,7 +805,7 @@ main()
 クエリを実行しました。(1 row affected.)
 ```
 
-MariaDB にログインして、追加されたデータを確認してみましょう。
+MariaDBにログインして、追加されたデータを確認してみましょう。
 
 ```sql
 MariaDB [iot_storage]> SELECT * FROM Ambient;
@@ -815,7 +819,7 @@ MariaDB [iot_storage]> SELECT * FROM Ambient;
 3 rows in set (0.001 sec)
 ```
 
-#### 5.4.5 継続的なデータの追加
+#### 5.4.7 継続的なデータの追加
 
 継続的に測定し、データを追加するプログラムを考えてみます。
 

@@ -2,8 +2,7 @@
 
 ## 4. MariaDBとPythonの連携
 
-Python から MariaDB を操作するプログラムを作成します。
-下記のように、プログラムを収納するディレクトリを作成します。
+PythonからMariaDBを操作するプログラムを作成します。下記のように、プログラムを収納するディレクトリを作成します。
 
 ```bash
 pi@raspberrypi:~ $ cd ~
@@ -17,8 +16,7 @@ pi@raspberrypi:~ $ mkdir python_sql
 pi@raspberrypi:~ $ cd python_sql
 ```
 
-MariaDB で管理されているデータベースを Python から操作するには、"PyMySQL"ライブラリを利用する必要があります。
-下記のコマンドを使って、PyMySQL がすでにインストールされているか確認しましょう。
+MariaDBで管理されているデータベースをPythonから操作するには、`PyMySQL`ライブラリを利用する必要があります。下記のコマンドを使って、PyMySQLがすでにインストールされているか確認しましょう。
 
 ```bash
 pi@raspberrypi:~/python_sql $ pip list | grep PyMySQL
@@ -29,26 +27,24 @@ PyMySQL                            1.0.2
 types-PyMySQL                      1.0
 ```
 
-上記のように PyMySQL が表示されればインストールされています。
+上記のように`PyMySQL`が表示されればインストールされています。
 
-PyMySQL モジュールについては、下記の URL より情報を収集することができます。
+`PyMySQL`については、下記のURLより情報を収集することができます。
 
 [PyMySQL documentation](https://pymysql.readthedocs.io/en/latest/index.html)
 
 ### 4.1 クエリの実行
 
-Python から MariaDB のクエリを実行します。
-練習用 DB から SELECT クエリを実行し、結果を出力します。
+PythonからMariaDBのクエリを実行します。練習用DBからSELECTクエリを実行し、結果を出力します。
 
 次のソースコードを作成し、実行してください。
+
+`select01.py`
 
 ```python
 #coding: utf-8
 
 import pymysql.cursors #PythonからDBを利用するためのモジュールを利用
-
-#select01.py
-#テーブルのデータを表示する
 
 def main():
 #DBサーバに接続する
@@ -88,18 +84,15 @@ account_id       first_name      last_name       balance          atm_count
 
 PythonからSQLサーバに接続し、クエリを実行してデータベース内のデータを取得することができました。
 
-
 ### 4.2 データベースの内容を変更しないクエリの実行
 
-データベースのデータを参照するだけで内容を変更しないクエリは、概ね下記のようなコードで実行できます。変更する箇所は、下記コードの四角で囲った部分です。
-なお、「データを参照するだけで内容を変更しない操作」を「副作用のない操作」ということもあります。
+データベースのデータを参照するだけで内容を変更しないクエリは、概ね下記のようなコードで実行できます。なお、「データを参照するだけで内容を変更しない操作」を「副作用のない操作」ということもあります。
+
+`select02.py`
 
 ```python
 #coding: utf-8
 import pymysql.cursors #PythonからDBを利用するためのモジュールを利用
-
-#select02.py
-#テーブルのデータを表示する
 
 def main():
     #DBサーバに接続する
@@ -138,7 +131,7 @@ account_id       first_name      last_name       balance          atm_count
 
 <code>SELECT * FROM ...</code>
 
-カラム名を * で指定するような書き方は避けるべきです。
+カラム名を`*`で指定するような書き方は避けるべきです。
 
 下記のように
 
@@ -150,22 +143,21 @@ account_id       first_name      last_name       balance          atm_count
 
 #### 4.3.1 クエリを直接指定する方法
 
-1 行のデータを挿入することを考えます。クエリ文字列は下記のようになります。
+1行のデータを挿入することを考えます。クエリ文字列は下記のようになります。
 
 <code>INSERT INTO BankAccount(account_id, first_name,last_name, balance, atm_count) VALUES('1234567','Jhon', 'von Neumann', 9999.98, 55)</code>
 
-次のプログラムは、1 行のデータを上記のクエリを使って挿入した後、すべての行を選択し表示します。クエリ文字列を設定して実行するまでの手順は、ほぼ同一であることを確認してください。
-
-挿入したデータを実際に反映させるには、commit()メソッドを実行する必要があります。
+次のプログラムは、1行のデータを上記のクエリを使って挿入した後、すべての行を選択し表示します。クエリ文字列を設定して実行するまでの手順は、ほぼ同一であることを確認してください。
 
 <code>sql_connection.commit()</code>
+
+挿入したデータを実際に反映させるには、`commit()`メソッドを実行する必要があります。
+
+`insert01.py`
 
 ```python
 #coding: utf-8
 import pymysql.cursors #Python から DB を利用するためのモジュールを利用
-
-#insert01.py
-#テーブルにデータを挿入する
 
 def main():
     #DB サーバに接続する
@@ -226,7 +218,7 @@ account_id       first_name      last_name       balance          atm_count
 8462626 ,        Watt ,  James ,         41971.230 ,     3
 ```
 
-#### ※行を削除するコマンド
+#### 4.3.2 行を削除するコマンド
 
 デバッグのためにプログラムを再実行すると、同じデータを重複して挿入することになります。
 MariaDBにログインして、下記のように新しく追加するデータを予め削除しておきましょう。
@@ -235,13 +227,13 @@ MariaDBにログインして、下記のように新しく追加するデータ�
 MariaDB [practice]> DELETE FROM BankAccount WHERE account_id = '1234567';
 ```
 
-#### 4.3.2 クエリとデータを分離する方法 その１
+#### 4.3.3 クエリとデータを分離する方法 その１
 
-1 行のデータを挿入することを考えます。相当するクエリ文字列は下記のようになります。
+1行のデータを挿入することを考えます。相当するクエリ文字列は下記のようになります。
 
 <code>INSERT INTO BankAccount(account_id, first_name, last_name, balance, atm_count) VALUES('223344', 'Stieve', 'Jobs', 9999999.23, 24);</code>
 
-次のプログラムは、上記クエリの"VALUES(…)"の部分を実際のデータではなく、"%s"のようなプレースホルダを指定し、後から実データを割り当てる方法を用いています。
+次のプログラムは、上記クエリの`VALUES(…)`の部分を実際のデータではなく、`%s`のようなプレースホルダを指定し、後から実データを割り当てる方法を用いています。
 
 <code>INSERT INTO BankAccount(account_id, first_name, last_name, balance, atm_count) VALUES(%s, %s, %s, %s, %s);</code>
 
@@ -251,12 +243,11 @@ MariaDB [practice]> DELETE FROM BankAccount WHERE account_id = '1234567';
 
 コードは次のようになります。
 
+`insert02.py`
+
 ```python
 #coding: utf-8
 import pymysql.cursors #PythonからDBを利用するためのモジュールを利用
-
-#insert02.py 
-#テーブルにデータを挿入する#(データとクエリを分離）
 
 def main():
     #DB サーバに接続する
@@ -330,7 +321,7 @@ account_id       first_name      last_name       balance          atm_count
 8462626 ,        Watt ,  James ,         41971.230 ,     3
 ```
 
-#### 4.3.3 クエリとデータを分離する方法 その２
+#### 4.3.4 クエリとデータを分離する方法 その２
 
 クエリにプレースホルダを設定し、実データはディクショナリ形式で指定します。 ディクショナリ形式でのデータの指定に備えて、プレースホルダにキー名を指定します。ここで指定するキー名は、ディクショナリでのキー名と一致する必要があります。
 
@@ -354,13 +345,11 @@ execute()メソッドの引数に、クエリ文字列とディクショナリ�
 
 コードは次のようになります。
 
+`insert03.py`
+
 ```python :
 #coding: utf-8
 import pymysql.cursors #Python から DB を利用するためのモジュールを利用
-
-#insert03.py:
-#テーブルにデータを挿入する
-#(データをディクショナリ形式で指定）
 
 def main():
     #DB サーバに接続する
@@ -449,32 +438,33 @@ account_id       first_name      last_name       balance          atm_count
 
 ### 4.4 外部からのデータ入力
 
-実際のデータベース操作では、入力するデータを外部から受け取る必要があります。キーボードやWEB の入力フォームをはじめ、外部からデータを入力する方法はいくつか存在します。データの受取の方法は場合によって様々ですが、受け取り後に注意をしてデータを取り扱う必要があります。
-外部から受け取ったデータをそのまま適用すると、思わぬ不具合や脆弱性を持つこともあります。
+実際のデータベース操作では、入力するデータを外部から受け取る必要があります。キーボードやWebの入力フォームをはじめ、外部からデータを入力する方法はいくつか存在します。データの受取の方法は場合によって様々ですが、受け取り後に注意をしてデータを取り扱う必要があります。外部から受け取ったデータをそのまま適用すると、思わぬ不具合や脆弱性を持つこともあります。
 
 #### 4.4.1 外部から受け取ったデータをそのまま反映する
 
-外部から受け取ったデータを、そのままクエリに反映する方法を用います。１件分のデータをキーボードから入力します。
-入力するデータは次のものを想定しています。
+外部から受け取ったデータを、そのままクエリに反映する方法を用います。１件分のデータをキーボードから入力します。入力するデータは次のものを想定しています。
 
 ```bash
-■データを入力してください。account_id: 987987 first_name: Linus last_name: Tovalds
+■データを入力してください。
+account_id: 987987
+first_name: Linus
+last_name: Tovalds
 balance: 6666666.66
 atm_count: 26
 ```
 
-データの入力には"input()"メソッドを使用します。引数には、入力を催すために表示する文字列を指定します。入力した文字列は変数に格納されます。
+データの入力には`input()`メソッドを使用します。引数には、入力を催すために表示する文字列を指定します。入力した文字列は変数に格納されます。
 
 <code>new_account_id = input('account_id: ') new_first_name = input('first_name: ') new_last_name = input('last_name: ') new_balance = input('balance: ')
 new_atm_count = input('atm_count: ')</code>
 
-input()メソッドの使い方については、下記 WEB サイトに詳しい解説があります。
+input()メソッドの使い方については、下記Webサイトに詳しい解説があります。
 
 [Python documentation](https://docs.python.org/ja/3/library/functions.html#input)
 
 下記に input()メソッドの解説を抜粋します。
 
-引数 prompt が存在すれば、それが末尾の改行を除いて標準出力に書き出されます。次に、この関数は入力から 1 行を読み込み、文字列に変換して (末尾の改行を除いて) 返します。 EOF が読み込まれたとき、 EOFError が送出されます。
+引数promptが存在すれば、それが末尾の改行を除いて標準出力に書き出されます。次に、この関数は入力から1行を読み込み、文字列に変換して (末尾の改行を除いて) 返します。 EOF が読み込まれたとき、 EOFError が送出されます。
 
 入力したデータをクエリに展開します。入力したデータを文字列に展開するには、"f 文字列"を使用します。 f"… {変数名} …"のように記述すると、{変数名}の部分にその変数の内容が展開されます。たとえば、次のように利用します。
 
@@ -487,12 +477,11 @@ VALUES('{new_account_id}', '{new_first_name}', '{new_last_name}', {new_balance},
 
 使用するコードは次のとおりです。
 
+`input01.py`
+
 ```python
 #coding: utf-8 import sys
 import pymysql.cursors #Python から DB を利用するためのモジュールを利用
-
-#input01.py:
-#ユーザが入力したデータをテーブルに挿入する#(クエリの中にデータを直接展開）)
 
 def main():
     #DB サーバに接続する
@@ -571,13 +560,11 @@ account_id       first_name      last_name       balance          atm_count
 
 #### 4.4.2 SQLインジェクションの危険性
 
-SQL インジェクションとは、入力欄に SQL コマンドを巧妙に埋め込み、データを改竄したり消したり、または不正に盗み出す行為の総称です。
-例えば、悪意のあるユーザが「名前」の欄に SQL コマンドを混入させて、全く関係のない他のユーザの登録情報を書き換える事も考えられます。
-このシステムの例では、"account_id"の入力欄に下記のコマンドを入力すると、意図しないデータの書き換えが行われてしまいます。
+SQLインジェクションとは、入力欄にSQLコマンドを巧妙に埋め込み、データを改竄したり消したり、または不正に盗み出す行為の総称です。例えば、悪意のあるユーザが「名前」の欄にSQLコマンドを混入させて、全く関係のない他のユーザの登録情報を書き換える事も考えられます。このシステムの例では、`account_id`の入力欄に下記のコマンドを入力すると、意図しないデータの書き換えが行われてしまいます。
 
 <code>3141592','','',0,0) ON DUPLICATE KEY UPDATE first_name = '怪盗ルパン'; #</code>
 
-実験の前に、MariaDB にログインして元のデータを確認しておきましょう。
+実験の前に、MariaDBにログインして元のデータを確認しておきましょう。
 
 ```sql
 MariaDB [practice]> SELECT * FROM BankAccount;
@@ -600,11 +587,11 @@ MariaDB [practice]> SELECT * FROM BankAccount;
 +------------+------------+-------------+------------------+-----------
 ```
 
-データを確認したら、"input01.py"を実行し、下記の文字列を"account_id"の欄に入力してみましょう。
+データを確認したら、`input01.py`を実行し、下記の文字列を`account_id`の欄に入力してみましょう。
 
 <code>3141592','','',0,0) ON DUPLICATE KEY UPDATE first_name = '怪盗ルパン'; #</code>
 
-実行結果の四角で囲った部分に注目してください。全く関係のないデータが書き換わっていることが確認できます。このプログラムは、データを新規に追加することを意図しているのに、全く関係のない他のユーザ情報が書き換えられてしまいました。
+実行結果に注目してください。全く関係のないデータが書き換わっていることが確認できます。このプログラムは、データを新規に追加することを意図しているのに、全く関係のない他のユーザ情報が書き換えられてしまいました。
 
 ```bash
 ■データを入力してください
@@ -636,26 +623,24 @@ account_id       first_name      last_name       balance          atm_count
 `実行するクエリ: INSERT INTO BankAccount(account_id, first_name, last_name, balance, atm_count)
 VALUES('3141592','','',0,0) ON DUPLICATE KEY UPDATE first_name = '怪盗ルパン'; #', '', 'aaaa', bbbb, 22)`
 
-前半はプログラムに埋め込まれていたクエリですが、後半は不正に入力されたクエリです。それらが組み合わさって「悪意があるけれどクエリとしては成立しているクエリ」が出来上がってしまいました。なお、"ON DUPLICATE KEY UPDATE…"は、「主キーが重複していればデータを更新する」という意味で、"#"以降はコメントとなります。
-これらを巧妙に組み合わせ、システムに意図せぬ動作をさせるのが「SQL インジェクション」です。外部からデータを受け取り SQL と連携させるには、これについて予め考慮しておく必要があります。
+前半はプログラムに埋め込まれていたクエリですが、後半は不正に入力されたクエリです。それらが組み合わさって「悪意があるけれどクエリとしては成立しているクエリ」が出来上がってしまいました。なお、`ON DUPLICATE KEY UPDATE…`は、「主キーが重複していればデータを更新する」という意味で、`#`以降はコメントとなります。これらを巧妙に組み合わせ、システムに意図せぬ動作をさせるのが「SQLインジェクション」です。外部からデータを受け取りSQLと連携させるには、これについて予め考慮しておく必要があります。
 
-#### 削除する
+#### 4.4.3 削除する
 
 ```sql
 MariaDB [practice]>  DELETE FROM BankAccount WHERE account_id = '3141592';
 ```
 
-#### 4.4.3 クエリとデータを分散する
+#### 4.4.4 クエリとデータを分散する
 
-SQLインジェクションの可能性を減らす方法のひとつが、プレースホルダを使用する方法です。この方法は「3.3.2.クエリとデータを分離する方法 その１」で説明しました。
-クエリの「命令」と「データ」を分離することで、意図せぬ命令を埋め込まれることを防ぎます。
+SQLインジェクションの可能性を減らす方法のひとつが、プレースホルダを使用する方法です。クエリの「命令」と「データ」を分離することで、意図せぬ命令を埋め込まれることを防ぎます。
 
-プレースホルダを使用するには、クエリの中のデータ部分を"%s"で置き換えます。
+プレースホルダを使用するには、クエリの中のデータ部分を`%s`で置き換えます。
 
 <code>INSERT INTO BankAccount(account_id, first_name, last_name, balance, atm_count)
 VALUES(%s, %s, %s, %s, %s);</code>
 
-実際のデータは"execute()"メソッドの引数で指定します。
+実際のデータは`execute()`メソッドの引数で指定します。
 
 <code>result1 = sql_cursor.execute(query1, (new_account_id, new_first_name, new_last_name, new_balance, new_atm_count))</code>
 
@@ -669,14 +654,13 @@ balance: 9998877.66
 atm_count: 33
 ```
 
+`input02.py`
+
 コードは次の通りです。
 
 ```python
 #coding: utf-8 import sys
 import pymysql.cursors #Python から DB を利用するためのモジュールを利用
-
-#input02.py:
-#ユーザが入力したデータをテーブルに挿入する#(クエリとデータを分離）
 
 def main():
     #DB サーバに接続する
@@ -756,7 +740,7 @@ account_id       first_name      last_name       balance          atm_count
 998877 ,         Bill ,  Gates ,         88888888.340 ,  54
 ```
 
-MariaDB にログインし、データが登録されているかどうか確認してください。
+MariaDBにログインし、データが登録されているかどうか確認してください。
 
 ```sql
 MariaDB [practice]> SELECT * FROM BankAccount;
@@ -782,7 +766,7 @@ MariaDB [practice]> SELECT * FROM BankAccount;
 
 入力したデータがそのまま反映されていることがわかります。
 
-前節で入力した SQL インジェクションを引き起こすコマンドを入力してみましょう。
+前節で入力したSQLインジェクションを引き起こすコマンドを入力してみましょう。
 
 <code>3141592','','',0,0) ON DUPLICATE KEY UPDATE first_name = '怪盗ルパン'; #</code>
 

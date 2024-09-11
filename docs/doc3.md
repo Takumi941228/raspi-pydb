@@ -3,14 +3,13 @@
 ## 3. 練習用データベースの作成
 
 練習用データベースを作成します。
-以前の実習ですでに作成済である場合は、この章は飛ばしても問題ありません。
 
 ### 3.1 テーブルとデータベースの作成
 
-#### データベースの作成
+#### 3.1.1 データベースの作成
 
 MariaDB側で、テーブルとデータベースを作成します。
-MariaDBにroot ユーザでログインして、データベースを作成します。
+MariaDBにrootユーザでログインして、データベースを作成します。
 
 ```bash
 pi@raspberrypi:~ $ sudo mariadb -u root
@@ -20,15 +19,19 @@ pi@raspberrypi:~ $ sudo mariadb -u root
 MariaDB[(none)]> CREATE DATABASE practice CHARACTER SET utf8mb4;
 ```
 
-#### ユーザの作成
+#### 3.1.2 ユーザの作成
 
 ユーザ名`iot_user`と`iot_admin`を作成する。
 
 ```sql
-MariaDB [(none)]> CREATE user 'ユーザ名'@'localhost' identified by '任意のパスワード';
+MariaDB [(none)]> CREATE user 'iot_user'@'localhost' identified by '任意のパスワード';
 ```
 
-#### ユーザの確認
+```sql
+MariaDB [(none)]> CREATE user 'iot_admin'@'localhost' identified by '任意のパスワード';
+```
+
+#### 3.1.3 ユーザの確認
 
 ```sql
 MariaDB [(none)]> SELECT host, user from mysql.user;
@@ -49,26 +52,25 @@ MariaDB [(none)]> SELECT host, user from mysql.user;
 5 rows in set (0.002 sec)
 ```
 
-#### 権限の付与
+#### 3.1.4 権限の付与
 
-ユーザ"iot_user"と"iot_admin"に、データベース"practice"に関する操作の権限を付与します。
+ユーザ`iot_user`と`iot_admin`に、データベース`practice`に関する操作の権限を付与します。
 
-"iot_user"は一般ユーザとして取り扱い、"iot_admin"は管理者ユーザとして取り扱います。
+`iot_user`は一般ユーザとして取り扱い、`iot_admin`は管理者ユーザとして取り扱います。
 
-次のコマンドは、"iot_user"に関する権限を付与します。付与する権限は、データベース"practice" に対する、一般的な SQL コマンドの使用です。
+次のコマンドは、`iot_user`に関する権限を付与します。付与する権限は、データベース`practice`に対する、一般的なSQLコマンドの使用です。
 
 ```sql
 MariaDB [(none)]> GRANT select, update, insert, delete ON practice.* TO 'iot_user'@'localhost';
 ```
 
-次のコマンドは、"iot_admin" に関する権限を付与します。付与する権限は、データベース
-"practice"に対する、すべての SQL コマンドの使用です。
+次のコマンドは、`iot_admin`に関する権限を付与します。付与する権限は、データベース`practice`に対する、すべてのSQLコマンドの使用です。
 
 ```sql
 MariaDB [(none)]> GRANT ALL PRIVILEGES ON practice.* TO 'iot_admin'@'localhost';
 ```
 
-#### 権限の確認
+#### 3.1.5 権限の確認
 
 ```sql
 MariaDB [practice]> SHOW grants for iot_user@localhost;
@@ -84,7 +86,7 @@ MariaDB [practice]> SHOW grants for iot_user@localhost;
 2 rows in set (0.000 sec)
 ```
 
-#### データベースの確認
+#### 3.1.6 データベースの確認
 
 ```sql
 MariaDB [none]> SHOW databases;
@@ -103,17 +105,13 @@ MariaDB [none]> SHOW databases;
 5 rows in set (0.001 sec)
 ```
 
-#### データベースの選択
+#### 3.1.7 データベースの選択
 
 ```sql
 MariaDB [none]> use practice;
 ```
 
-```bash
-Database changed
-```
-
-#### テーブルの作成
+#### 3.1.8 テーブルの作成
 
 テーブルを作成します。
 
@@ -121,7 +119,7 @@ Database changed
 | --- | --- | --- | --- | --- |
 |account_id | 口座番号 | CAHR(10) | 最大10桁まで対応文字列として処理 | ◯ |
 | first_name | 名前 | VARCHAR(100) | 長い名前 の人に対応し100byteまで対応 | - |
-| last_name | 名字 | VARCHAR(100) | 長い名前 の人に対応し100byteまで対応 |  - | 
+| last_name | 名字 | VARCHAR(100) | 長い名前 の人に対応し100byteまで対応 |  - |
 | balance | 残高 | DECIMAL(16,3) | 大富豪に対応し16桁まで。小数点以下は 3 位まで記録 | - |
 | atm_count | ATM利用回数 | INT | 小数点を使用しない | - |
 
@@ -137,7 +135,7 @@ MariaDB [practice]> CREATE TABLE
 
 ※SQLでは、Enterで改行して、コマンドを複数行にわたって記述することができます。
 
-#### テーブルの確認
+#### 3.1.9 テーブルの確認
 
 ```sql
 MariaDB [practice]> show tables;
@@ -152,7 +150,7 @@ MariaDB [practice]> show tables;
 1 row in set (0.001 sec)
 ```
 
-#### テーブルの中身の確認
+#### 3.1.10 テーブルの確認
 
 ```sql
 MariaDB [practice]> show fields from BankAccount;
@@ -209,7 +207,7 @@ MariaDB [practice]> INSERT INTO BankAccount(account_id,first_name, last_name, ba
 MariaDB [practice]> INSERT INTO BankAccount(account_id,first_name, last_name, balance, atm_count) VALUES('2795028', 'Koichi', 'Hasegawa', 24362.06, 5);
 ```
 
-### 3.1　データの確認
+### 3.3 データの確認
 
 ```sql
 MariaDB [practice]> SELECT * FROM BankAccount;
@@ -226,7 +224,7 @@ MariaDB [practice]> SELECT * FROM BankAccount;
 6 rows in set (0.001 sec)
 ```
 
-exitコマンドでデータベースの操作から抜ける。
+`exit`コマンドでデータベースの操作から抜ける。
 
 ```sql
 MariaDB [practice]> exit
