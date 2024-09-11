@@ -909,7 +909,7 @@ Database connection established!
 クエリを実行しました。(1 row affected.)
 ```
 
-MariaDB にログインして、追加されたデータを確認しましょう。
+MariaDBにログインして、追加されたデータを確認しましょう。
 
 ```sql
 MariaDB [iot_storage]> SELECT * FROM Ambient;
