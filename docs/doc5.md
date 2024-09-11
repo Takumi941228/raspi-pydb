@@ -519,6 +519,7 @@ Database changed
 主キーはこれらのデータの他に整数型の重複しない番号を割り当てることにします。
 
 | テーブル名 | Ambient |
+| --- | --- |
 
 | 内容 | カラム名 | データ型 | 制約 |
 | --- | --- | --- | --- |
@@ -611,5 +612,278 @@ Empty set (0.001 sec)
 ```
 
 データがまだ何も登録されていない場合は、`Empty set` と表示されます。
-データをテスト追加するにあたって、以前作成した"bme280_cyclic01.py" で測定した実際の測定値を利用してみましょう。
+
+データをテスト追加するにあたって、以前作成した `bme280_cyclic01.py`で測定した実際の測定値を利用してみましょう。
 プログラムを実行すると、次のように表示されます。
+
+```bash
+測定時間[YYYY-MM-DD HH:MM:SS], 温度[℃], 湿度[%], 気圧[hPa]
+2024-09-06 20:03:00,    27.26,    49.66,    998.24
+```
+
+このデータを利用して、次のようにクエリを作成してみましょう。
+
+```sql
+INSERT INTO Ambient(timestamp, identifier, temperature, humidity, pressure) VALUES('2024-09-06 20:03:00', 'tochigi_iot_999', '27.26', '49.66', '998.24');
+Query OK, 1 row affected (0.107 sec)
+```
+
+```sql
+MariaDB [iot_storage]> SELECT * FROM Ambient;
++--------+---------------------+-----------------+-------------+----------+----------+
+| row_id | timestamp           | identifier      | temperature | humidity | pressure |
++--------+---------------------+-----------------+-------------+----------+----------+
+|      2 | 2024-09-06 20:03:00 | tochigi_iot_999 |       27.26 |    49.66 |   998.24 |
++--------+---------------------+-----------------+-------------+----------+----------+
+1 row in set (0.001 sec)
+```
+
+#### 5.4.3 プログラムからのデータ追加　その１
+
+センサからのデータ測定が可能となり、データベースの準備もできています。測定したデータをデータベースに挿入するプログラムを考えていきます。
+※センサからのデータの取得には、以前作成した`bme280mod.py`を使用します。
+
+```python
+#coding: utf-8
+
+#モジュールをインポート
+import bme280mod #BME280センサ関連を取扱う
+import time      #時間を取扱う
+import datetime  #日付と時刻を取扱う
+import pymysql.cursors #PythonからDBを取扱う
+
+
+#このノードを識別するID
+NODE_IDENTIFIER = 'tochigi_iot_999';
+
+def main():
+    #モジュール内に定義されているメソッドを呼び出す
+    bme280mod.init() #BME280センサを初期化
+
+    print('測定日時[YYYY-MM-DD HH:MM:SS], 温度[℃], 湿度[%], 気圧[hPa]')
+
+    bme280mod.read_data() #測定
+    data = bme280mod.get_data() #データを取得
+
+    #ディクショナリからデータを取得
+    new_temp = round(data['temperature'], 2) #小数点以下2桁で丸め
+    new_hum = round(data['humidity'], 2)
+    new_press = round(data['pressure'], 2)
+
+    new_timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    print(f'{new_timestamp}, {new_temp:.2f}, {new_hum:.2f}, {new_press:.2f}') #データベースの操作を行う
+    #DB サーバに接続する
+    sql_connection = pymysql.connect(
+        user='iot_user', #データベースにログインするユーザ名
+        passwd='password', #データベースユーザのパスワード
+        host='localhost', #接続先DBのホストorIPアドレス
+        db='iot_storage'
+    )
+
+    #cursor オブジェクトのインスタンスを生成
+    sql_cursor = sql_connection.cursor()
+    print('●クエリの実行(データの挿入)')
+    #クエリを指定する。実データは後から指定する。
+    query1 = "INSERT INTO Ambient(timestamp, identifier, temperature, humidity, pressure) " \
+             " VALUES(%s, %s, %s, %s, %s)";
+
+    #クエリを実行する
+    result1 = sql_cursor.execute(query1,(new_timestamp, NODE_IDENTIFIER, new_temp, new_hum, new_press))
+
+    print('実行するクエリ: ' + query1)
+
+    #クエリを実行した。変更した row の数が戻り値となる
+    print('クエリを実行しました。('+ str(result1) +' row affected.)')
+
+    #変更を実際に反映させる
+    sql_connection.commit()
+
+main()
+```
+
+```sql
+測定日時[YYYY-MM-DD HH:MM:SS], 温度[℃], 湿度[%], 気圧[hPa]
+2024-09-09 18:07:19, 25.98, 43.80, 1001.80
+●クエリの実行(データの挿入)
+実行するクエリ: INSERT INTO Ambient(timestamp, identifier, temperature, humidity, pressure)  VALUES(%s, %s, %s, %s, %s)
+クエリを実行しました。(1 row affected.)
+```
+
+MariaDB にログインして、追加されたデータを確認してください。
+
+```sql
+MariaDB [iot_storage]> SELECT * FROM Ambient;
++--------+---------------------+-----------------+-------------+----------+----------+
+| row_id | timestamp           | identifier      | temperature | humidity | pressure |
++--------+---------------------+-----------------+-------------+----------+----------+
+|      2 | 2024-09-06 20:03:00 | tochigi_iot_999 |       27.26 |    49.66 |   998.24 |
+|      3 | 2024-09-09 18:07:19 | tochigi_iot_999 |       25.98 |     43.8 |   1001.8 |
++--------+---------------------+-----------------+-------------+----------+----------+
+2 rows in set (0.001 sec)
+```
+
+#### 5.4.4 プログラムからのデータ追加　その２
+
+追加するデータを一つのディクショナリ形式にまとめたコードを考えてみます。
+
+```python
+#coding: utf-8
+
+#モジュールをインポート
+import bme280mod       #BME280センサ関連を取扱う
+import time            #時間を取扱う
+import datetime        #日付と時刻を取扱う
+import pymysql.cursors #PythonからDBを取扱う
+
+
+#このノードを識別するID
+NODE_IDENTIFIER = 'tochigi_iot_999';
+
+def main():
+    #モジュール内に定義されているメソッドを呼び出す
+    bme280mod.init() #BME280センサを初期化
+
+    print('測定日時[YYYY-MM-DD HH:MM:SS], 温度[℃], 湿度[%], 気圧[hPa]')
+
+    bme280mod.read_data() #測定
+    data = bme280mod.get_data() #データを取得
+
+    #ディクショナリからデータを取得
+    new_temp = round(data['temperature'], 2) #小数点以下 2 桁で丸め
+    new_hum = round(data['humidity'], 2)
+
+    new_press = round(data['pressure'], 2)
+    new_timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S ")
+
+    #DB に渡すための新しいディクショナリ形式にまとめる。
+    new_row ={"timestamp" : new_timestamp, "identifier" : NODE_IDENTIFIER, "temperature": new_temp, "humidity": new_hum,"pressure": new_press};
+
+    print(f'{new_timestamp}, {new_temp:.2f}, {new_hum:.2f}, {new_press:.2f}')
+
+    #データベースの操作を行う------
+
+    #DB サーバに接続する
+    sql_connection = pymysql.connect(
+        user='iot_user', #データベースにログインするユーザ名
+        passwd='password',#データベースユーザのパスワード
+        host='localhost', #接続先DBのホストorIPアドレス
+        db='iot_storage'
+    )
+
+    #cursor オブジェクトのインスタンスを生成
+    sql_cursor = sql_connection.cursor()
+    print('●クエリの実行(データの挿入)')
+
+    #クエリを指定する。実データは後から指定する。
+    query1 = "INSERT INTO Ambient(timestamp, identifier, temperature, humidity, pressure) " \
+            " VALUES(%(timestamp)s, %(identifier)s, %(temperature)s, %(humidity)s, %(pressure)s)";
+
+    #クエリを実行する
+    result1 = sql_cursor.execute(query1, new_row)
+    
+    print('実行するクエリ: ' + query1)
+
+    #クエリを実行した。変更した row の数が戻り値となる
+    print('クエリを実行しました。('+ str(result1) +' row affected.)')
+
+    #変更を実際に反映させる
+    sql_connection.commit()
+
+main()
+```
+
+```bash
+測定日時[YYYY-MM-DD HH:MM:SS], 温度[℃], 湿度[%], 気圧[hPa]
+2024-09-09 18:16:37 , 25.76, 42.79, 1001.83
+●クエリの実行(データの挿入)
+実行するクエリ: INSERT INTO Ambient(timestamp, identifier, temperature, humidity, pressure)  VALUES(%(timestamp)s, %(identifier)s, %(temperature)s, %(humidity)s, %(pressure)s)
+クエリを実行しました。(1 row affected.)
+```
+
+MariaDB にログインして、追加されたデータを確認してみましょう。
+
+```sql
+MariaDB [iot_storage]> SELECT * FROM Ambient;
++--------+---------------------+-----------------+-------------+----------+----------+
+| row_id | timestamp           | identifier      | temperature | humidity | pressure |
++--------+---------------------+-----------------+-------------+----------+----------+
+|      2 | 2024-09-06 20:03:00 | tochigi_iot_999 |       27.26 |    49.66 |   998.24 |
+|      3 | 2024-09-09 18:07:19 | tochigi_iot_999 |       25.98 |     43.8 |   1001.8 |
+|      4 | 2024-09-09 18:16:37 | tochigi_iot_999 |       25.76 |    42.79 |  1001.83 |
++--------+---------------------+-----------------+-------------+----------+----------+
+3 rows in set (0.001 sec)
+```
+
+#### 5.4.5 継続的なデータの追加
+
+継続的に測定し、データを追加するプログラムを考えてみます。
+
+```python
+#coding: utf-8
+
+#モジュールをインポート
+import bme280mod #BME280センサ関連を取扱う
+import time      #時間を取扱う
+import datetime  #日付と時刻を取扱う
+import pymysql.cursors #PythonからDBを取扱う
+
+
+#このノードを識別するID
+NODE_IDENTIFIER = 'tochigi_iot_999';
+
+#DBへの接続情報
+DB_USER = 'iot_user'
+DB_PASS = 'password'
+DB_HOST = 'localhost'
+DB_NAME = 'iot_storage'
+
+def main():
+    #モジュール内に定義されているメソッドを呼び出す
+    bme280mod.init() #BME280センサを初期化
+
+    #DBサーバに接続する
+    sql_connection = pymysql.connect(
+        user= DB_USER,  #データベースにログインするユーザ名
+        passwd = DB_PASS, #データベースユーザのパスワード
+        host = DB_HOST,   #接続先DBのホストorIPアドレス
+        db = DB_NAME
+    )
+
+    print("Database connection established!");
+    
+    while True:
+        bme280mod.read_data()       #測定
+        data = bme280mod.get_data() #データを取得
+
+        #ディクショナリからデータを取得
+        new_temp = round(data['temperature'], 2) #小数点以下2桁で丸め
+        new_hum = round(data['humidity'], 2)
+        new_press = round(data['pressure'], 2)
+        new_timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        #DBに渡すための新しいディクショナリ形式にまとめる。
+        new_row = {"timestamp" : new_timestamp, "identifier" : NODE_IDENTIFIER, "temperature": new_temp, "humidity" :        new_hum, "pressure" : new_press};
+
+        print(f'●NEW_DATA● TIMESTAMP: {new_timestamp}, TEMP: {new_temp:.2f}, HUMIDITY: {new_hum:.2f}, PRESSURE: {new_press:.2f}')
+
+        #データベースの操作を行う------
+
+        #cursorオブジェクトのインスタンスを生成
+        sql_cursor = sql_connection.cursor()
+        print('-- クエリの実行(データの挿入)')
+        #クエリを指定する。実データは後から指定する。
+        query1 = "INSERT INTO Ambient(timestamp, identifier, temperature, humidity, pressure) " \
+                " VALUES(%(timestamp)s, %(identifier)s, %(temperature)s, %(humidity)s, %(pressure)s)";
+
+        #クエリを実行する
+        result1 = sql_cursor.execute(query1, new_row) print('実行するクエリ: ' + query1)
+        #クエリを実行した。変更したrowの数が戻り値となる
+        print('クエリを実行しました。('+ str(result1) +' row affected.)')
+
+        #変更を実際に反映させる
+        sql_connection.commit()
+
+        time.sleep(10)
+main()
+```
