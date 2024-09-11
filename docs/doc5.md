@@ -823,6 +823,8 @@ MariaDB [iot_storage]> SELECT * FROM Ambient;
 
 継続的に測定し、データを追加するプログラムを考えてみます。
 
+`bme280_inset_cyclic01.py`
+
 ```python
 #coding: utf-8
 
@@ -881,7 +883,8 @@ def main():
                 " VALUES(%(timestamp)s, %(identifier)s, %(temperature)s, %(humidity)s, %(pressure)s)";
 
         #クエリを実行する
-        result1 = sql_cursor.execute(query1, new_row) print('実行するクエリ: ' + query1)
+        result1 = sql_cursor.execute(query1, new_row)
+        print('実行するクエリ: ' + query1)
         #クエリを実行した。変更したrowの数が戻り値となる
         print('クエリを実行しました。('+ str(result1) +' row affected.)')
 
@@ -890,4 +893,183 @@ def main():
 
         time.sleep(10)
 main()
+```
+
+実行結果は次のようになります。
+
+```bash
+Database connection established!
+●NEW_DATA● TIMESTAMP: 2024-09-11 15:44:57, TEMP: 25.77, HUMIDITY: 53.02, PRESSURE: 1001.27
+-- クエリの実行(データの挿入)
+実行するクエリ: INSERT INTO Ambient(timestamp, identifier, temperature, humidity, pressure)  VALUES(%(timestamp)s, %(identifier)s, %(temperature)s, %(humidity)s, %(pressure)s)
+クエリを実行しました。(1 row affected.)
+●NEW_DATA● TIMESTAMP: 2024-09-11 15:45:07, TEMP: 25.80, HUMIDITY: 53.30, PRESSURE: 1001.21
+-- クエリの実行(データの挿入)
+実行するクエリ: INSERT INTO Ambient(timestamp, identifier, temperature, humidity, pressure)  VALUES(%(timestamp)s, %(identifier)s, %(temperature)s, %(humidity)s, %(pressure)s)
+クエリを実行しました。(1 row affected.)
+```
+
+MariaDB にログインして、追加されたデータを確認しましょう。
+
+```sql
+MariaDB [iot_storage]> SELECT * FROM Ambient;
+```
+
+```sql
++--------+---------------------+-----------------+-------------+----------+----------+
+| row_id | timestamp           | identifier      | temperature | humidity | pressure |
++--------+---------------------+-----------------+-------------+----------+----------+
+|      2 | 2024-09-06 20:03:00 | tochigi_iot_999 |       27.26 |    49.66 |   998.24 |
+|      3 | 2024-09-09 18:07:19 | tochigi_iot_999 |       25.98 |     43.8 |   1001.8 |
+|      4 | 2024-09-09 18:16:37 | tochigi_iot_999 |       25.76 |    42.79 |  1001.83 |
+|      5 | 2024-09-11 15:44:57 | tochigi_iot_999 |       25.77 |    53.02 |  1001.27 |
+|      6 | 2024-09-11 15:45:07 | tochigi_iot_999 |        25.8 |     53.3 |  1001.21 |
+|      7 | 2024-09-11 15:45:18 | tochigi_iot_999 |       25.79 |    52.32 |   1001.2 |
+|      8 | 2024-09-11 15:45:28 | tochigi_iot_999 |       25.78 |    52.95 |  1001.23 |
+|      9 | 2024-09-11 15:45:38 | tochigi_iot_999 |       25.79 |     52.7 |  1001.19 |
+|     10 | 2024-09-11 15:45:48 | tochigi_iot_999 |       25.79 |    52.61 |  1001.25 |
+|     11 | 2024-09-11 15:45:58 | tochigi_iot_999 |       25.81 |    53.43 |  1001.26 |
+|     12 | 2024-09-11 15:46:08 | tochigi_iot_999 |       25.82 |    53.22 |  1001.27 |
+|     13 | 2024-09-11 15:46:18 | tochigi_iot_999 |       25.86 |    53.62 |  1001.25 |
+|     14 | 2024-09-11 15:46:28 | tochigi_iot_999 |        25.9 |    53.89 |  1001.19 |
+|     15 | 2024-09-11 15:46:38 | tochigi_iot_999 |       25.91 |    53.43 |  1001.22 |
+|     16 | 2024-09-11 15:46:48 | tochigi_iot_999 |       25.84 |    52.71 |  1001.23 |
++--------+---------------------+-----------------+-------------+----------+----------+
+15 rows in set (0.001 sec)
+```
+
+#### 5.4.8 モジュールの分割
+
+データベースへのアクセスについても、BME280の測定と同じようにモジュールにまとめましょう。モジュールを機能ごとに分割することによって、プログラムの保守性と可読性を向上させます。モジュール名は、`db_ambient.py`とします。
+
+`db_ambient.py`
+
+```python
+#coding: utf-8
+
+#モジュールをインポート
+import pymysql.cursors #PythonからDBを取扱う
+
+#DB への接続情報
+DB_USER = 'iot_user'
+DB_PASS = 'password'
+DB_HOST = 'localhost'
+DB_NAME = 'iot_storage'
+
+#共通で使うオブジェクトを指すための準備
+sql_connection = None
+
+def connect():
+    global sql_connection
+
+    #DB サーバに接続する
+    sql_connection = pymysql.connect(
+        user = DB_USER, #データベースにログインするユーザ名
+        passwd = DB_PASS,#データベースユーザのパスワード
+        host = DB_HOST, #接続先DBのホストorIPアドレス
+        db = DB_NAME
+    )
+
+def insert_row(row): #クエリの作成
+    query = "INSERT INTO Ambient(timestamp, identifier, temperature, humidity, pressure) " \
+        " VALUES(%(timestamp)s, %(identifier)s, %(temperature)s, %(humidity)s, %(pressure)s)";
+
+    #cursor オブジェクトのインスタンスを生成
+    sql_cursor = sql_connection.cursor()
+
+    #クエリを実行する
+    result = sql_cursor.execute(query, row)
+
+    #変更を実際に反映させる
+    sql_connection.commit()
+
+    return(result)
+```
+
+`bme280_insert_cyclic02.py`
+
+```python
+#coding: utf-8
+
+#モジュールをインポート
+import bme280mod  #BME280センサ関連を取扱う
+import db_ambient #DB関連を取扱う
+import time       #時間を取扱う
+import datetime   #日付と時刻を取扱う
+
+#このノードを識別するID
+NODE_IDENTIFIER = 'tochigi_iot_999';
+
+#何秒ごとに測定するか
+CYCLE_SEC = 10
+
+def main():
+    #モジュール内に定義されているメソッドを呼び出す
+    bme280mod.init() #BME280センサを初期化
+
+    #DBサーバに接続する
+    db_ambient.connect()
+
+    while True:
+        bme280mod.read_data() #測定
+        data = bme280mod.get_data() #データを取得
+
+        #DBに渡すための新しいディクショナリ形式にまとめる。
+        new_row ={
+            "timestamp" : datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "identifier" : NODE_IDENTIFIER,
+            "temperature" : round(data['temperature'], 2),
+            "humidity" : round(data['humidity'], 2),
+            "pressure" : round(data['pressure'], 2)
+        };
+
+        #データベースの操作を行う------
+        db_result = db_ambient.insert_row(new_row)
+        print('追加するデータ: ', new_row)
+        #クエリを実行した。変更した row の数が戻り値となる
+        print('クエリを実行しました。('+ str(db_result) +' row affected.)')
+
+        time.sleep(CYCLE_SEC)
+
+main()
+```
+
+実行結果は、次のようになります。
+
+```bash
+追加するデータ:  {'timestamp': '2024-09-11 16:00:54', 'identifier': 'tochigi_iot_999', 'temperature': 25.78, 'humidity': 49.92, 'pressure': 1001.18}
+クエリを実行しました。(1 row affected.)
+追加するデータ:  {'timestamp': '2024-09-11 16:01:04', 'identifier': 'tochigi_iot_999', 'temperature': 25.83, 'humidity': 50.27, 'pressure': 1001.11}
+クエリを実行しました。(1 row affected.)
+```
+
+MariaDBにログインして、追加したデータを確認してみましょう。
+
+```sql
+MariaDB [iot_storage]> SELECT * FROM Ambient;
+```
+
+```sql
++--------+---------------------+-----------------+-------------+----------+----------+
+| row_id | timestamp           | identifier      | temperature | humidity | pressure |
++--------+---------------------+-----------------+-------------+----------+----------+
+|      2 | 2024-09-06 20:03:00 | tochigi_iot_999 |       27.26 |    49.66 |   998.24 |
+|      3 | 2024-09-09 18:07:19 | tochigi_iot_999 |       25.98 |     43.8 |   1001.8 |
+|      4 | 2024-09-09 18:16:37 | tochigi_iot_999 |       25.76 |    42.79 |  1001.83 |
+|      5 | 2024-09-11 15:44:57 | tochigi_iot_999 |       25.77 |    53.02 |  1001.27 |
+|      6 | 2024-09-11 15:45:07 | tochigi_iot_999 |        25.8 |     53.3 |  1001.21 |
+|      7 | 2024-09-11 15:45:18 | tochigi_iot_999 |       25.79 |    52.32 |   1001.2 |
+|      8 | 2024-09-11 15:45:28 | tochigi_iot_999 |       25.78 |    52.95 |  1001.23 |
+|      9 | 2024-09-11 15:45:38 | tochigi_iot_999 |       25.79 |     52.7 |  1001.19 |
+|     10 | 2024-09-11 15:45:48 | tochigi_iot_999 |       25.79 |    52.61 |  1001.25 |
+|     11 | 2024-09-11 15:45:58 | tochigi_iot_999 |       25.81 |    53.43 |  1001.26 |
+|     12 | 2024-09-11 15:46:08 | tochigi_iot_999 |       25.82 |    53.22 |  1001.27 |
+|     13 | 2024-09-11 15:46:18 | tochigi_iot_999 |       25.86 |    53.62 |  1001.25 |
+|     14 | 2024-09-11 15:46:28 | tochigi_iot_999 |        25.9 |    53.89 |  1001.19 |
+|     15 | 2024-09-11 15:46:38 | tochigi_iot_999 |       25.91 |    53.43 |  1001.22 |
+|     16 | 2024-09-11 15:46:48 | tochigi_iot_999 |       25.84 |    52.71 |  1001.23 |
+|     17 | 2024-09-11 16:00:54 | tochigi_iot_999 |       25.78 |    49.92 |  1001.18 |
+|     18 | 2024-09-11 16:01:04 | tochigi_iot_999 |       25.83 |    50.27 |  1001.11 |
++--------+---------------------+-----------------+-------------+----------+----------+
+17 rows in set (0.001 sec)
 ```
