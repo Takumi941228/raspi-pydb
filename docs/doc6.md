@@ -181,6 +181,8 @@ Silicon Labs CP210x driverを以下のアドレスよりダウンロードして
 
 #### 6.3.6 ブレッドボードへの配線
 
+* 温湿度・気圧センサと小型LCD
+
 |信号名|AE-BME280| AE-AQM0802 |ESP32 GPIO|
 |:-:|:-:|:-:|:-:|
 |SCL|SCK|SCL|22|
@@ -188,6 +190,8 @@ Silicon Labs CP210x driverを以下のアドレスよりダウンロードして
 |(アドレス選択)|SDO|-|(3.3V)|
 |(電源/VDD)|VDD|VDD|(3.3V)|
 |(電源/GND)|GND|GND|(GND)|
+
+* LEDとタクトスイッチ
 
 |GPIO|パーツ|
 |:-:|:-:|
@@ -349,7 +353,7 @@ void PublishSensorData(void) {
   //センサからデータの取得
   bme.readAllMeasurements(&measurements);
 
-  // シリアルモニタにセンサデータを表示
+  // シリアルモニタに取得時間とセンサデータを表示
   Serial.println("Timestamp");
   Serial.println(timeClient.getFormattedTime());
   Serial.println("Humidity,Pressure,BME-Temp");
@@ -376,6 +380,7 @@ void PublishSensorData(void) {
   client.publish(TOPIC, message_buffer);
 }
 
+/* スイッチの状態確認 */
 void Switch_check(void) {
   if (!digitalRead(SW1)) {
     lcd.clear();
@@ -400,7 +405,7 @@ void Switch_check(void) {
   }
 }
 
-
+/* setup関数 */
 void setup() {
   Serial.begin(115200);
 
@@ -430,7 +435,7 @@ void setup() {
   timeClient.begin();               // init NTP
   timeClient.setTimeOffset(32400);  // 0= GMT, 3600 = GMT+1, 32400 = GMT+9
 
-  // PIN設定
+  //PIN設定
   pinMode(SW1, INPUT_PULLUP);
   pinMode(SW2, INPUT_PULLUP);
   pinMode(SW3, INPUT_PULLUP);
@@ -439,12 +444,10 @@ void setup() {
   pinMode(Y_LED, OUTPUT);
 }
 
+/* loop関数 */
 void loop() {
-
   Mqtt_connect();  // MQTTBrokerへの接続
-
   Switch_check();  // タクトSWの状態読取り
-
   timeClient.update();  //ntp更新
 
   switch (mode) {
@@ -490,16 +493,17 @@ pi@raspberrypi:~/python_sql $ mosquitto_sub -h localhost -p 1883 -t esp32/bme
 ```
 
 ```bash
-{"humid":43.02246094,"press":994.9807739,"temp":28.90999985}
-{"humid":42.4296875,"press":994.9707031,"temp":28.92000008}
-{"humid":43.44042969,"press":994.9788818,"temp":28.92000008}
-{"humid":44,"press":994.9128418,"temp":28.95000076}
-{"humid":44.38183594,"press":994.9726563,"temp":28.96999931}
-{"humid":43.23242188,"press":994.9519043,"temp":28.98999977}
-{"humid":43.53027344,"press":995.048584,"temp":29}
+pi@raspberrypi:~/python_sql $ mosquitto_sub -d -h localhost -p 1883 -t esp32/bme
+Client (null) sending CONNECT
+Client (null) received CONNACK (0)
+Client (null) sending SUBSCRIBE (Mid: 1, Topic: esp32/bme, QoS: 0, Options: 0x00)
+Client (null) received SUBACK
+Subscribed (mid: 1): 0
+Client (null) received PUBLISH (d0, q0, r0, m0, 'esp32/bme', ... (83 bytes))
+{"timestamp":"19:01:01","humid":47.76269531,"press":1002.090454,"temp":27.37000084}
 ```
 
-取得データの``{"humid":xxxxx ...}の部分が、JSONという形式で書かれています。
+取得データの`{"timestamp":"xx:xx:xx", humid":xxxxx ...}`の部分が、JSONという形式で書かれています。
 
 ### 6.4 PythonからのMQTTデータ取得
 
@@ -551,16 +555,13 @@ mqttClient.loop_forever()
 
 ```bash
 Connected with result code 0
-esp32/bme b'{"humid":50.63769531,"press":995.2075195,"temp":27.29000092}'
-esp32/bme b'{"humid":50.62988281,"press":995.2385864,"temp":27.32999992}'
-esp32/bme b'{"humid":50.29980469,"press":995.2550049,"temp":27.34000015}'
+esp32/bme b'{"timestamp":"19:03:31","humid":49.19726563,"press":1002.027893,"temp":27.29999924}'
+esp32/bme b'{"timestamp":"19:03:36","humid":49.13769531,"press":1002.019592,"temp":27.29000092}'
 ```
 
 #### 6.4.2 日付を付けたデータの取得
 
-Pythonのプログラムで、「データを取得した日時」「温度」「湿度」「気圧」を受信データより取得します。「温度」「湿度」「気圧」は、"mod.data"の項目より取得できます。「データを取得した日時」は"gw.date"の項目より取得します。※"data"と"date"を混同しやすいので、注意してください。「データを取得した日時」は、よくみると時間がずれているように思うかもしれません。その場合は、
-UTC(世界協定時刻)になっていることを疑ってください。
-
+Pythonのプログラムで、データを取得した日付を付けて、「データを取得した日時」、「温度」、「湿度」、「気圧」を受信データより取得します。
 
 `mqtt_get02.py`
 
@@ -605,7 +606,8 @@ def on_message(client, userdata, msg):
   temp_raw = json_msg["temp"]
 
   #各データを扱いやすい形に変換
-  date = str(dt.today().strftime('%Y-%m-%d')) + " " + str(date_raw)
+  date = str(dt.today().strftime('%Y-%m-%d')) + " " + str(date_raw)　#日付と時間を文字列連結
+  #小数点第二位で四捨五入
   temp = round(temp_raw, 2)
   humi = round(humi_raw, 2)
   press = round(press_raw, 2)
@@ -771,20 +773,6 @@ MariaDB [iot_storage]> SELECT * FROM Ambient;
 +--------+---------------------+------------------+-------------+----------+----------+
 | row_id | timestamp           | identifier       | temperature | humidity | pressure |
 +--------+---------------------+------------------+-------------+----------+----------+
-|      2 | 2024-09-06 20:03:00 | tochigi_iot_999  |       27.26 |    49.66 |   998.24 |
-|      3 | 2024-09-09 18:07:19 | tochigi_iot_999  |       25.98 |     43.8 |   1001.8 |
-|      4 | 2024-09-09 18:16:37 | tochigi_iot_999  |       25.76 |    42.79 |  1001.83 |
-|      5 | 2024-09-11 15:44:57 | tochigi_iot_999  |       25.77 |    53.02 |  1001.27 |
-|      6 | 2024-09-11 15:45:07 | tochigi_iot_999  |        25.8 |     53.3 |  1001.21 |
-|      7 | 2024-09-11 15:45:18 | tochigi_iot_999  |       25.79 |    52.32 |   1001.2 |
-|      8 | 2024-09-11 15:45:28 | tochigi_iot_999  |       25.78 |    52.95 |  1001.23 |
-|      9 | 2024-09-11 15:45:38 | tochigi_iot_999  |       25.79 |     52.7 |  1001.19 |
-|     10 | 2024-09-11 15:45:48 | tochigi_iot_999  |       25.79 |    52.61 |  1001.25 |
-|     11 | 2024-09-11 15:45:58 | tochigi_iot_999  |       25.81 |    53.43 |  1001.26 |
-|     12 | 2024-09-11 15:46:08 | tochigi_iot_999  |       25.82 |    53.22 |  1001.27 |
-|     13 | 2024-09-11 15:46:18 | tochigi_iot_999  |       25.86 |    53.62 |  1001.25 |
-|     14 | 2024-09-11 15:46:28 | tochigi_iot_999  |        25.9 |    53.89 |  1001.19 |
-|     15 | 2024-09-11 15:46:38 | tochigi_iot_999  |       25.91 |    53.43 |  1001.22 |
 |     16 | 2024-09-11 15:46:48 | tochigi_iot_999  |       25.84 |    52.71 |  1001.23 |
 |     17 | 2024-09-11 16:00:54 | tochigi_iot_999  |       25.78 |    49.92 |  1001.18 |
 |     18 | 2024-09-11 16:01:04 | tochigi_iot_999  |       25.83 |    50.27 |  1001.11 |
@@ -871,7 +859,7 @@ import db_ambient
 NODE_IDENTIFIER = 'tochigi_mqtt_999';
 
 #MQTTブローカへの接続に必要な情報
-MQTT_HOST = '10.45.48.110'
+MQTT_HOST = 'Raspberr PiのIPアドレス'
 MQTT_PORT = 1883
 MQTT_TOPIC = 'esp32/bme'
 #mqttClient を指すための変数を用意
@@ -900,7 +888,8 @@ def on_message(client, userdata, msg):
   temp_raw = json_msg["temp"]
   
   #各データを扱いやすい形に変換
-  date = str(dt.today().strftime('%Y-%m-%d')) + " " + str(date_raw)
+  date = str(dt.today().strftime('%Y-%m-%d')) + " " + str(date_raw)　#日付と時間を文字列連結
+  #小数点第二位で四捨五入
   temp = round(temp_raw, 2)
   humi = round(humi_raw, 2)
   press = round(press_raw, 2)
