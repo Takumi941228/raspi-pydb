@@ -189,8 +189,7 @@ MariaDB [iot_storage]> SELECT * FROM Ambient WHERE timestamp > '2024-09-11 16:00
 次のクエリは、`timestamp`のカラム(日付・時刻)を基準に、`2024年09月11日9:00:00`から`2024年09月19日16:00:00`までの間に取得したデータすべて取り出します。
 
 ```sql
-MariaDB [iot_storage]> SELECT * FROM Ambient WHERE timestamp BETWEEN '2024-09-11 09:0
-0:00' AND '2024-09-19 16:00:00';
+MariaDB [iot_storage]> SELECT * FROM Ambient WHERE timestamp BETWEEN '2024-09-11 09:00:00' AND '2024-09-19 16:00:00';
 ```
 
 ```sql
@@ -275,8 +274,7 @@ MariaDB [iot_storage]> SELECT * FROM Ambient WHERE timestamp >= 23.0 LIMIT 5;
 次のクエリは、`temperature`の値が23.0以上かつ`humidity`の値が50.0以上のデータを5行取り出します。
 
 ```sql
-MariaDB [iot_storage]> SELECT * FROM Ambient WHERE timestamp >= 23.0 AND humidity >=
-50.0 LIMIT 5;
+MariaDB [iot_storage]> SELECT * FROM Ambient WHERE timestamp >= 23.0 AND humidity >= 50.0 LIMIT 5;
 ```
 
 ```sql
@@ -329,8 +327,7 @@ MariaDB [iot_storage]> SELECT MAX(temperature) FROM Ambient WHERE timestamp BETW
 次のクエリは、`timestamp`のカラム(日付・時刻)を基準に、`2024年09月19日9:00:00`から`2024年09月19日16:00:00`までの間にノード`tochigi_mqtt_999`で取得した`humidity`データの平均を求めます。
 
 ```sql
-MariaDB [iot_storage]> SELECT AVG(humidity) FROM Ambient WHERE timestamp BETWEEN '2024-09-19 9:00:00' AND '2024-09-19 16:
-00:00' AND identifier = "tochigi_mqtt_999";
+MariaDB [iot_storage]> SELECT AVG(humidity) FROM Ambient WHERE timestamp BETWEEN '2024-09-19 9:00:00' AND '2024-09-19 16:00:00' AND identifier = "tochigi_mqtt_999";
 ```
 
 ```sql
@@ -363,8 +360,7 @@ MariaDB [iot_storage]> SELECT timestamp, AVG(temperature), AVG(humidity), AVG(pr
 `GROUP BY`の考え方について、次のクエリを実行し結果を確認してください。
 
 ```sql
-MariaDB [iot_storage]> SELECT timestamp, temperature, CONCAT(YEAR(timestamp), MONTH(timestamp), DAY(timestamp), HOUR(timestamp)) FROM Ambient WHERE identifier = "tochigi_mqtt_999" AND
- timestamp >= '2024-09-19 00:00:00' ORDER BY timestamp ASC;
+MariaDB [iot_storage]> SELECT timestamp, temperature, CONCAT(YEAR(timestamp), MONTH(timestamp), DAY(timestamp), HOUR(timestamp)) FROM Ambient WHERE identifier = "tochigi_mqtt_999" AND timestamp >= '2024-09-19 00:00:00' ORDER BY timestamp ASC;
 ```
 
 このクエリの結果を下記に示します。句`CONCAT(YEAR(timestamp), MONTH(timestamp), DAY(timestamp), HOUR(timestamp))`で示したカラムに注目してください。関数`CONCAT()`は、引数のデータを文字列として連結します。関数`YEAR()`は引数となった日付・日時の`年`の部分を取り出します。関数`MONTH()`,`DAY()`,`HOUR()`についても、引数となった日付・時刻のそれぞれ月・日・時の部分を取り出します。
@@ -435,3 +431,6 @@ MariaDB [iot_storage]> SELECT CONCAT(YEAR(timestamp), "年", MONTH(timestamp), "
 +-----------------------+----------------------------------+
 2 rows in set (0.001 sec)
 ```
+
+### 7.2 集計したデータの表示
+
