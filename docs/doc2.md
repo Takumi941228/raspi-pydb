@@ -4,17 +4,92 @@
 
 ### 2.1 Raspberry Piの設定
 
+#### 2.1.1 初期設定
+
+* Next
+
+![SetUP](../images/setup.JPG)
+
+* Country
+    * Japan
+* Language
+    * Japanese
+* Timezone
+    * Tokyo
+* Next
+
+![SetUP](../images/setup2.JPG)
+
+* Enter username
+    * pi
+* Enter password
+    * 任意
+* Confirm password
+    * 上記同様
+* Next
+
+![SetUP](../images/setup3.JPG)
+
+* OK
+
+![SetUP](../images/setup4.JPG)
+
+* 接続先SSIDをクリック
+* Next
+
+![SetUP](../images/setup5.JPG)
+
+* password
+    * 任意
+* Next
+
+![SetUP](../images/setup6.JPG)
+
+* Next
+
+![SetUP](../images/setup7.JPG)
+
+* Next
+
+![SetUP](../images/setup8.JPG)
+
+* Skip
+
+![SetUP](../images/setup9.JPG)
+
+* OK
+
+![SetUP](../images/setup10.JPG)
+
+* Restart
+
+![SetUP](../images/setup11.JPG)
+
 #### 2.1.1 IPアドレスの設定
 
 別端末からSSH接続によるリモートアクセスができるように、Raspberry PiのIPアドレス等を手動で設定します。
 
-まず、Wi-Fiに接続します。
-
-![IPAdress](../images/raspberry.PNG)
-
 接続するSSIDを選択し、パスワードを入力後、`高度なオプション`から、タブ`IPv4設定`でIPアドレス及びDNSサーバーを設定します。
 
+![IPAdress](../images/raspberry5.PNG)
+
+![IPAdress](../images/raspberry6.PNG)
+
 ![IPAdress](../images/raspberry2.PNG)
+
+保存後、Raspberry Piの再起動させます。
+
+```bash
+pi@raspberrypi:~ $ sudo reboot
+```
+
+設定したIPアドレスが反省されているかを確認します。
+
+```bash
+pi@raspberrypi:~ $ ifconfig
+```
+
+![IPAdress](../images/raspberry7.PNG)
 
 #### 2.1.2 インターフェースの有効化
 
@@ -23,7 +98,6 @@ RaspberryPi のメニューより「RaspberryPi の設定」を開き、イン�
 ![IPAdress](../images/raspberry3.PNG)
 
 ![IPAdress](../images/raspberry4.PNG)
-
 
 ### 2.2 開発環境のインストール
 
