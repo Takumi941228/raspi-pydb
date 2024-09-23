@@ -434,3 +434,287 @@ MariaDB [iot_storage]> SELECT CONCAT(YEAR(timestamp), "年", MONTH(timestamp), "
 
 ### 7.2 集計したデータの表示
 
+Pythonからクエリを実行し、MariaDB側で集計したデータをPythonで受け取り、表示するプログラムを考えます。
+
+#### 7.2.1 単純なクエリの実行
+
+「timestampのカラム(日付・時刻)を基準に、`2024年09月19日10:00:00`以降に取得したデータを5行取り出す」ことを考えます。SQLのクエリとその実行は下記のようになります。
+
+```sql
+MariaDB [iot_storage]> SELECT timestamp, identifier, temperature, humidity, pressure FROM Ambient WHERE timestamp > '2024-09-19 10:00:00' LIMIT 5;
+```
+
+```sql
++---------------------+------------------+-------------+----------+----------+
+| timestamp           | identifier       | temperature | humidity | pressure |
++---------------------+------------------+-------------+----------+----------+
+| 2024-09-19 14:59:51 | tochigi_mqtt_999 |       27.39 |    40.63 |  1000.71 |
+| 2024-09-19 14:59:56 | tochigi_mqtt_999 |        27.4 |    40.68 |  1000.76 |
+| 2024-09-19 15:00:01 | tochigi_mqtt_999 |        27.4 |    40.64 |  1000.75 |
+| 2024-09-19 15:00:06 | tochigi_mqtt_999 |       27.35 |     40.7 |  1000.73 |
+| 2024-09-19 15:00:11 | tochigi_mqtt_999 |       27.36 |    40.65 |  1000.75 |
++---------------------+------------------+-------------+----------+----------+
+5 rows in set (0.001 sec)
+```
+
+このクエリをPythonから実行し、表示することを考えます。「4. MariaDBとPythonの連携」を参考に、テーブルの構造をこのテーブル(Ambient)に当てはめてプログラムを変更すると良いでしょう。
+
+`bme280_select01.py`
+
+```python
+#coding: utf-8
+
+import pymysql.cursors #PythonからDBを利用するためのモジュールを利用
+
+#DBへの接続情報
+DB_USER = 'iot_user'
+DB_PASS = 'password'
+DB_HOST = 'localhost'
+DB_NAME = 'iot_storage'
+
+def main():
+    #DBサーバに接続する
+    sql_connection = pymysql.connect(
+        user = DB_USER,   #データベースにログインするユーザ名
+        passwd = DB_PASS, #データベースユーザのパスワード
+        host = DB_HOST,   #接続先DBのホストorIPアドレス
+        db = DB_NAME
+    )
+    #cursorオブジェクトのインスタンスを生成
+    sql_cursor = sql_connection.cursor()
+
+    #クエリのパラメータを定義
+    datetime_start = '2024-09-19 10:00:00'
+    limit_count = 5
+
+    #クエリのコマンド
+    query = 'SELECT timestamp, identifier, temperature, humidity, pressure '\
+            'FROM Ambient WHERE timestamp > %s LIMIT %s;'
+
+    sql_cursor.execute(query, (datetime_start, limit_count))
+
+    print('●実行するクエリ: ', query)
+    print( 'timestamp       \t', 'identifier        \t', 'temperature   \t', 'humidity  \t', 'pressure')
+
+    #クエリを実行した結果得られたデータを１行ずつ表示する
+    for row in sql_cursor.fetchall():
+        print(row[0], ', \t', row[1], ', \t', row[2], ', \t', row[3], ', \t', row[4])
+main()
+```
+
+実行結果は次のようになります。
+
+```bash
+●実行するクエリ:  SELECT timestamp, identifier, temperature, humidity, pressure FROM Ambient WHERE timestamp > %s LIMIT %s;
+timestamp                identifier              temperature     humidity        pressure
+2024-09-19 14:59:51 ,    tochigi_mqtt_999 ,      27.39 ,         40.63 ,         1000.71
+2024-09-19 14:59:56 ,    tochigi_mqtt_999 ,      27.4 ,          40.68 ,         1000.76
+2024-09-19 15:00:01 ,    tochigi_mqtt_999 ,      27.4 ,          40.64 ,         1000.75
+2024-09-19 15:00:06 ,    tochigi_mqtt_999 ,      27.35 ,         40.7 ,          1000.73
+2024-09-19 15:00:11 ,    tochigi_mqtt_999 ,      27.36 ,         40.65 ,         1000.75
+```
+
+#### 7.2.2 プログラムの実行時に日付・時刻を指定する
+
+表示を開始する日付と時刻をプログラムの実行時に指定することを考えます。キーボードからこれらの値を入力して、登録したデータの内容を閲覧するときの自由度を向上させます。
+
+`bme280_select02.py`
+
+```python
+#coding: utf-8
+
+import pymysql.cursors #PythonからDBを利用するためのモジュールを利用
+
+#DBへの接続情報
+DB_USER = 'iot_user'
+DB_PASS = 'password'
+DB_HOST = 'localhost'
+DB_NAME = 'iot_storage'
+
+def main():
+    #DBサーバに接続する
+    sql_connection = pymysql.connect(
+        user = DB_USER,   #データベースにログインするユーザ名
+        passwd = DB_PASS, #データベースユーザのパスワード
+        host = DB_HOST,   #接続先DBのホストorIPアドレス
+        db = DB_NAME
+    )
+    #cursorオブジェクトのインスタンスを生成
+    sql_cursor = sql_connection.cursor()
+
+    #クエリのパラメータを入力
+    #表示を開始する日付・時刻を入力する
+    print('いつのデータから表示しますか？')
+    s_year = input('年(例: 2024): ')
+    s_month = input('月(例: 09): ')
+    s_day = input('日(例: 19): ')
+    s_hour = input('時(例: 10): ')
+    datetime_start = f'{s_year}-{s_month}-{s_day} {s_hour}:00:00'
+    print(f'{datetime_start}のデータからから何行のデータを表示しますか？')
+ 
+    #入力したデータを数値に変換
+    limit_count = int(input('数値を入力(例: 5) : '))
+
+    #クエリのコマンド
+    query = 'SELECT timestamp, identifier, temperature, humidity, pressure '\
+            'FROM Ambient WHERE timestamp > %s LIMIT %s;'
+    print('●実行するクエリ: ', query)
+    sql_cursor.execute(query, (datetime_start, limit_count))
+
+    print( 'timestamp       \t', 'identifier        \t', 'temperature   \t', 'humidity  \t ','pressure')
+
+    #クエリを実行した結果得られたデータを１行ずつ表示する
+    for row in sql_cursor.fetchall():
+        print(row[0], ', \t', row[1], ', \t', row[2], ', \t', row[3], ', \t', row[4])
+main()
+```
+
+実行結果は次のようになります。
+
+```bash
+いつのデータから表示しますか？
+年(例: 2024): 2024
+月(例: 09): 09
+日(例: 19): 19
+時(例: 10): 10
+2024-09-19 10:00:00のデータからから何行のデータを表示しますか？
+数値を入力(例: 5) : 5
+●実行するクエリ:  SELECT timestamp, identifier, temperature, humidity, pressure FROM Ambient WHERE timestamp > %s LIMIT %s;
+timestamp                identifier              temperature     humidity         pressure
+2024-09-19 14:59:51 ,    tochigi_mqtt_999 ,      27.39 ,         40.63 ,         1000.71
+2024-09-19 14:59:56 ,    tochigi_mqtt_999 ,      27.4 ,          40.68 ,         1000.76
+2024-09-19 15:00:01 ,    tochigi_mqtt_999 ,      27.4 ,          40.64 ,         1000.75
+2024-09-19 15:00:06 ,    tochigi_mqtt_999 ,      27.35 ,         40.7 ,          1000.73
+2024-09-19 15:00:11 ,    tochigi_mqtt_999 ,      27.36 ,         40.65 ,         1000.75
+```
+
+#### 7.2.3 １時間毎の集計値を表示する
+
+「7.1.7 １時間毎の平均値を集計」のように、１時間毎に集計したデータを表示することを考えます。集計を開始する日付・時刻はキーボードから入力します。
+クエリの結果得られた温度・湿度・気圧のデータは、pythonのround()関数を使って小数点第２位まで表示します。
+
+`bme280_count_hour01.py`
+
+```python
+#coding: utf-8
+import pymysql.cursors #PythonからDBを利用するためのモジュールを利用
+
+#DBへの接続情報
+DB_USER = 'iot_user'
+DB_PASS = 'password'
+DB_HOST = 'localhost'
+DB_NAME = 'iot_storage'
+
+def main():
+    #DBサーバに接続する
+    sql_connection = pymysql.connect(
+        user = DB_USER,  #データベースにログインするユーザ名
+        passwd = DB_PASS,#データベースユーザのパスワード
+        host = DB_HOST,  #接続先DBのホストorIPアドレス
+        db = DB_NAME
+    )
+    #cursorオブジェクトのインスタンスを生成
+    sql_cursor = sql_connection.cursor()
+
+    #クエリのパラメータを入力
+    #表示を開始する日付・時刻を入力する
+    print('１時間ごとに平均したデータを表示します。')
+    print('どのノードのデータを表示しますか？')
+    node_id = input('ノードの Identifier(例: tochigi_mqtt_999): ')
+
+    print('いつのデータから表示しますか？')
+    s_year = input('年(例: 2024): ')
+    s_month = input('月(例: 09): ')
+    s_day = input('日(例: 19): ')
+    s_hour = input('時(例: 00): ')
+
+    datetime_start = f'{s_year}-{s_month}-{s_day} {s_hour}:00:00'
+
+    print(f'{datetime_start}のデータからから何行のデータを表示しますか？')
+    #入力したデータを数値に変換
+    limit_count = int(input('数値を入力(例: 5) : '))
+
+
+    #クエリのコマンド
+    query = 'SELECT timestamp, identifier, AVG(temperature), AVG(humidity) , AVG(pressure) '\
+            'FROM Ambient WHERE identifier=%(target_id)s '\
+            'AND timestamp >= %(target_timestamp)s '\
+            'GROUP BY CONCAT(YEAR(timestamp), MONTH(timestamp), DAY(timestamp), HOUR(timestamp)) '\
+            'ORDER BY timestamp ASC '\
+            'LIMIT %(target_limit_count)s;'
+
+    #クエリに渡すデータ
+    param = {'target_id': node_id, 'target_timestamp': datetime_start, 'target_limit_count': limit_count};
+
+    print('●実行するクエリ: ', query, 'Data: ', param)
+    sql_cursor.execute(query, param)
+
+    print( 'timestamp       \t', 'identifier        \t',  'temperature  \t', 'humidity  \t', 'pressure')
+
+    #クエリを実行した結果得られたデータを１行ずつ表示する
+    print('●取得したデータを表示します')
+
+    for row in sql_cursor.fetchall():
+        print( row[0], ', \t', row[1], ', \t', round(row[2], 2), ', \t', round(row[3], 2), ', \t', round(row[4], 2))
+main()
+```
+
+実行結果は次のようになります。
+
+```bash
+１時間ごとに平均したデータを表示します。
+どのノードのデータを表示しますか？
+ノードの Identifier(例: tochigi_mqtt_999): tochigi_mqtt_999
+いつのデータから表示しますか？
+年(例: 2024): 2024
+月(例: 09): 09
+日(例: 19): 19
+時(例: 00): 00
+2024-09-19 00:00:00のデータからから何行のデータを表示しますか？
+数値を入力(例: 5) : 5
+●実行するクエリ:  SELECT timestamp, identifier, AVG(temperature), AVG(humidity) , AVG(pressure) FROM Ambient WHERE identifier=%(target_id)s AND timestamp >= %(target_timestamp)s GROUP BY CONCAT(YEAR(timestamp), MONTH(timestamp), DAY(timestamp), HOUR(timestamp)) ORDER BY timestamp ASC LIMIT %(target_limit_count)s; Data:  {'target_id': 'tochigi_mqtt_999', 'target_timestamp': '2024-09-19 00:00:00', 'target_limit_count': 5}
+timestamp                identifier              temperature     humidity        pressure
+●取得したデータを表示します
+2024-09-19 14:59:51 ,    tochigi_mqtt_999 ,      27.39 ,         40.66 ,         1000.74
+2024-09-19 15:00:01 ,    tochigi_mqtt_999 ,      27.36 ,         41.02 ,         1000.69
+```
+
+#### 7.2.4 モジュール化によるプログラムの整理
+
+MariaDBに直接アクセスするコードを別のモジュールに分けて記述することで、機能の中核となるコードを見やすくすることを考えます。MariaDBに直接アクセスするプログラムを記述するモジュールを`db_ambient_count01.py`とします。
+
+モジュール`db_ambient_count01.py`には、「指定された日時から１時間ごとに平均の気温・湿度・気圧をMariaDBにて集計し、その結果を得て辞書形式で渡す」メソッドを定義します。メソッドの引数には、開始する日時、ノードのIdentifier、開始する日時から何時間先のデータを取得するかを指定します。戻り値を辞書の配列として受け取ります。
+
+`bme280_count_hour02.py`
+
+```python
+#coding: utf-8
+
+#DB関連をまとめたモジュール
+import db_ambient_count01
+
+def main():
+    #DBサーバに接続する
+    db_ambient_count01.connect()
+
+    #クエリのパラメータを入力
+    #表示を開始する日付・時刻を入力する
+    print('１時間ごとに平均したデータを表示します。')
+    print('どのノードのデータを表示しますか？')
+    node_id = input('ノードのIdentifier(例: tochigi_mqtt_999): ')
+
+    print('いつのデータから表示しますか？') s_year = input('年(例: 2020): ')
+    s_month = input('月(例: 01): ')
+    s_day = input('日(例: 21): ')
+    s_hour = input('時(例: 02): ')
+    datetime_start = f'{s_year}-{s_month}-{s_day} {s_hour}:00:00'
+    print(f'{datetime_start}のデータからから何行のデータを表示しますか？')
+
+    #入力したデータを数値に変換
+    limit_count = int(input('数値を入力(例: 5) : '))
+
+    #クエリを実施して結果を得る
+    result = db_ambient_count01.select_ave_one_hour(node_id, datetime_start, limit_count)
+
+#クエリの結果得られたデータを表示する
+```
