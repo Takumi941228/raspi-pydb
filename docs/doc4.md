@@ -33,7 +33,16 @@ types-PyMySQL                      1.0
 
 [PyMySQL documentation](https://pymysql.readthedocs.io/en/latest/index.html)
 
-### 4.1 クエリの実行
+### 4.1 操作フォルダの設定
+
+VSCodeからPythonスクリプトを実行するため、Raspberry Piの`python_sql`ディレクトリにアクセスします。
+
+![IPAdress](../images/vscode20.PNG)
+
+* フォルダーを開くpython_sql
+
+
+### 4.2 クエリの実行
 
 PythonからMariaDBのクエリを実行します。練習用DBからSELECTクエリを実行し、結果を出力します。
 
