@@ -256,21 +256,20 @@ RaspberryPi のメニューより「RaspberryPi の設定」を開き、イン�
 
 ### 2.3 Pythonの開発環境
 
-まず、aptパッケージのアップデートをします。
+~~まず、aptパッケージのアップデートをします。~~
 
-```bash
-pi@raspberrypi:~ $ sudo apt update
-```
+~~pi@raspberrypi:~ $ sudo apt update~~
 
-```bash
-pi@raspberrypi:~ $ sudo apt upgrade
-```
+~~pi@raspberrypi:~ $ sudo apt -y upgrade~~
+
+- インストールにかなり時間がかかってしまうので、割愛します。
 
 本実習では、開発環境として`Python3.11`を利用します。
 下記のコマンドで、既にインストールされているPythonのバージョンを確認することができます。
 
 ```bash
-pi@raspberrypi:~ $ python3 -V
+pi@raspberrypi:~ $ python -V
+Python 3.11.2
 ```
 
 Python で MySQL を取扱うことができるように、ライブラリをインストールします。
