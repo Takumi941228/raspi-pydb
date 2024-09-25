@@ -274,6 +274,7 @@ pi@raspberrypi:~ $ sudo apt -y upgrade
 pi@raspberrypi:~ $ python -V
 ```
 
+```bash
 Python 3.11.2
 ```
 
