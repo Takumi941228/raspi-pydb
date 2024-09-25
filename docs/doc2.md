@@ -258,21 +258,26 @@ RaspberryPi のメニューより「RaspberryPi の設定」を開き、イン�
 
 ~~まず、aptパッケージのアップデートをします。~~
 
-~~pi@raspberrypi:~ $ sudo apt update~~
+```bash
+pi@raspberrypi:~ $ sudo apt update
+pi@raspberrypi:~ $ sudo apt -y upgrade
+```
 
-~~pi@raspberrypi:~ $ sudo apt -y upgrade~~
+* インストールにかなり時間がかかってしまうので、割愛します。
+   * aptパッケージの更新をしないと既存のパッケージでは、本実習を実施できない可能性もあります。
 
-- インストールにかなり時間がかかってしまうので、割愛します。
-
-本実習では、開発環境として`Python3.11`を利用します。
+本実習では、実行環境として`Python3.11`を利用します。
+* `2024年9月現在`Rspberry Pi 64bit OSを書き込んだところ、Python3.11が同梱されていました。
 下記のコマンドで、既にインストールされているPythonのバージョンを確認することができます。
 
 ```bash
 pi@raspberrypi:~ $ python -V
+```
+
 Python 3.11.2
 ```
 
-Python で MySQL を取扱うことができるように、ライブラリをインストールします。
+PythonでMySQLを取扱うことができるように、ライブラリをインストールします。
 
 ```bash
 pi@raspberrypi:~ $ sudo apt -y install python3-pymysql
