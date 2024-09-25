@@ -262,11 +262,15 @@ RaspberryPi のメニューより「RaspberryPi の設定」を開き、イン�
 pi@raspberrypi:~ $ sudo apt update
 ```
 
-本実習では、開発環境として`idle`を利用します。
-下記のコマンドで、インストールを行ってください。すでにインストールされている場合は、実行する必要はありません。
+```bash
+pi@raspberrypi:~ $ sudo apt upgrade
+```
+
+本実習では、開発環境として`Python3.11`を利用します。
+下記のコマンドで、既にインストールされているPythonのバージョンを確認することができます。
 
 ```bash
-pi@raspberrypi:~ $ sudo apt -y install idle-python3.11
+pi@raspberrypi:~ $ python3 -V
 ```
 
 Python で MySQL を取扱うことができるように、ライブラリをインストールします。
