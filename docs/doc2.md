@@ -69,7 +69,16 @@
 
 別端末からSSH接続によるリモートアクセスができるように、Raspberry PiのIPアドレス等を手動で設定します。
 
-接続するSSIDを選択し、パスワードを入力後、`高度なオプション`から、タブ`IPv4設定`でIPアドレス及びDNSサーバーを設定します。
+接続するSSIDを選択し、パスワードを入力後、`高度なオプション`から、接続を編集します。
+
+* `編集するSSID`を選択し、歯車をクリック
+* タブ`IPv4設定`でMethodを`手動`
+* `Add`をクリックし、IPアドレス等及びDNSサーバの追加
+    * アドレス：x.x.x.x
+    * ネットマスク : x.x.x.x
+    * ゲートウェイ : x.x.x.x
+    * DNSサーバー : x.x.x.x
+* 保存をクリック
 
 ![IPAdress](../images/raspberry5.PNG)
 
@@ -258,10 +267,9 @@ RaspberryPi のメニューより「RaspberryPi の設定」を開き、イン�
 
 ~~まず、aptパッケージのアップデートをします。~~
 
-```bash
-pi@raspberrypi:~ $ sudo apt update
-pi@raspberrypi:~ $ sudo apt -y upgrade
-```
+~~pi@raspberrypi:~ $ sudo apt update~~
+
+~~pi@raspberrypi:~ $ sudo apt -y upgrade~~
 
 * インストールにかなり時間がかかってしまうので、割愛します。
     * aptパッケージの更新をしないと既存のパッケージでは、本実習を実施できない可能性もあります。
