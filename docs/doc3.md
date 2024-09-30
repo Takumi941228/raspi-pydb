@@ -37,7 +37,7 @@ MariaDB [(none)]> CREATE user 'iot_admin'@'localhost' identified by '任意の�
 MariaDB [(none)]> SELECT host, user from mysql.user;
 ```
 
-以下のようになる。
+以下のようになる。`iot_admin`と`iot_user`が追加されていることを確認する。
 
 ```bash
 +-----------+-------------+
@@ -83,6 +83,20 @@ MariaDB [practice]> SHOW grants for iot_user@localhost;
 | GRANT USAGE ON *.* TO `iot_user`@`localhost` IDENTIFIED BY PASSWORD '*DDFB542AA0BD1D251995D81AEBEB96DEEAD1132F' |
 | GRANT SELECT, INSERT, UPDATE, DELETE ON `practice`.* TO `iot_user`@`localhost`                                  |
 +-----------------------------------------------------------------------------------------------------------------+
+2 rows in set (0.000 sec)
+```
+
+```sql
+MariaDB [(none)]> SHOW grants for iot_admin@localhost;
+```
+
+```sql
++------------------------------------------------------------------------------------------------------------------+
+| Grants for iot_admin@localhost                                                                                   |
++------------------------------------------------------------------------------------------------------------------+
+| GRANT USAGE ON *.* TO `iot_admin`@`localhost` IDENTIFIED BY PASSWORD '*DDFB542AA0BD1D251995D81AEBEB96DEEAD1132F' |
+| GRANT ALL PRIVILEGES ON `practice`.* TO `iot_admin`@`localhost`                                                  |
++------------------------------------------------------------------------------------------------------------------+
 2 rows in set (0.000 sec)
 ```
 
@@ -179,6 +193,8 @@ MariaDB [practice]> show fields from BankAccount;
 | 653589793 | Nicola | Tesla | 50288.45 | 2 |
 | 8462626 | Watt | James | 41971.23 | 3 |
 | 43383 | Bell | Graham | 693.01 | 1 |
+| 84197169 | Carlos | Ghosn | 314159265358.970 | 6 |
+| 2795028 | Eiichi | Shibusawa | 24362.060 | 5 |
 
 次のコマンドに倣って、データを追加しましょう。
 文字列データは ' ' (シングルクオート) で囲みます。数値データはそのまま入力します
@@ -204,7 +220,7 @@ MariaDB [practice]> INSERT INTO BankAccount(account_id,first_name, last_name, ba
 ```
 
 ```sql
-MariaDB [practice]> INSERT INTO BankAccount(account_id,first_name, last_name, balance, atm_count) VALUES('2795028', 'Koichi', 'Hasegawa', 24362.06, 5);
+MariaDB [practice]> INSERT INTO BankAccount(account_id,first_name, last_name, balance, atm_count) VALUES('2795028', 'Eiichi', 'Shibusawa', 24362.06, 5);
 ```
 
 ### 3.3 データの確認
@@ -214,7 +230,7 @@ MariaDB [practice]> SELECT * FROM BankAccount;
 +------------+------------+-----------+------------------+-----------+
 | account_id | first_name | last_name | balance          | atm_count |
 +------------+------------+-----------+------------------+-----------+
-| 2795028    | Koichi     | Hasegawa  |        24362.060 |         5 |
+| 2795028    | Eiichi     | Shibusawa |        24362.060 |         5 |
 | 3141592    | Thomas     | Edison    |         -279.670 |        10 |
 | 43383      | Bell       | Graham    |          693.010 |         1 |
 | 653589793  | Nicola     | Tesla     |        50288.450 |         2 |
