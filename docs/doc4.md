@@ -338,15 +338,13 @@ account_id       first_name      last_name       balance          atm_count
 
 ディクショナリ形式でのデータの指定は、次のように行います。
 
-<code>
-new_row = {
+<code>new_row = {
     'account_id' : '998877'
     'first_name' : 'Bill'
     'last_name' : 'Gates'
     'balance' : 88888888.34,
     'atm_count' : 54
-}
-</code>
+}</code>
 
 execute()メソッドの引数に、クエリ文字列とディクショナリ変数を指定します。
 
