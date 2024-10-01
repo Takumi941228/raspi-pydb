@@ -734,7 +734,7 @@ import pymysql.cursors #PythonからDBを取扱う
 
 #DBへの接続情報
 DB_USER = 'iot_user'
-DB_PASS = 'password'
+DB_PASS = 'Passw0rd'
 DB_HOST = 'localhost'
 DB_NAME = 'iot_storage'
 
@@ -803,7 +803,7 @@ def select_ave_one_hour(node_id, start_timestamp, limit_count):
             'humidity' : row[3],
             'pressure' : row[4]
         }
-    array.append(dict)
+        array.append(dict)
 
     #データを格納した辞書の配列を返す
     return(array)
@@ -814,14 +814,18 @@ def select_ave_one_hour(node_id, start_timestamp, limit_count):
 ```bash
 １時間ごとに平均したデータを表示します。
 どのノードのデータを表示しますか？
-ノードのIdentifier(例: tochigi_mqtt_999): tochigi_mqtt_999
+ノードの Identifier(例: tochigi_mqtt_999): tochigi_mqtt_999
 いつのデータから表示しますか？
 年(例: 2024): 2024
 月(例: 09): 09
 日(例: 19): 19
 時(例: 00): 00
 2024-09-19 00:00:00のデータからから何行のデータを表示しますか？
-数値を入力(例: 5) : 5
+数値を入力(例: 5) : 100
+●実行するクエリ:  SELECT timestamp, identifier, AVG(temperature), AVG(humidity) , AVG(pressure) FROM Ambient WHERE identifier=%(target_id)s AND timestamp >= %(target_timestamp)s GROUP BY CONCAT(YEAR(timestamp), MONTH(timestamp), DAY(timestamp), HOUR(timestamp)) ORDER BY timestamp ASC LIMIT %(target_limit_count)s; Data:  {'target_id': 'tochigi_mqtt_999', 'target_timestamp': '2024-09-19 00:00:00', 'target_limit_count': 100}
 timestamp                identifier              temperature     humidity        pressure
+●取得したデータを表示します
+2024-09-19 14:59:51 ,    tochigi_mqtt_999 ,      27.39 ,         40.66 ,         1000.74
 2024-09-19 15:00:01 ,    tochigi_mqtt_999 ,      27.36 ,         41.02 ,         1000.69
+2024-10-01 14:56:13 ,    tochigi_mqtt_999 ,      25.72 ,         57.19 ,         991.38
 ```
