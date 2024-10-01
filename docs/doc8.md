@@ -38,10 +38,10 @@ plt.plot(x,y)
 plt.show()
 ```
 
-RealVNC Viewerを使い、ターミナルから以下のコマンドを実行します。
+`RealVNC Viewer`を使い、ターミナルから以下のコマンドを実行します。
 
 ```bash
-pi@raspberrypi:~/python_sql $ /bin/python /home/pi/python_sql/graph01.py
+pi@raspberrypi:~/python_sql $ python graph01.py
 ```
 
 次のようなグラフが表示されます。
@@ -78,7 +78,7 @@ def main():
     #表示を開始する日付・時刻を入力する
     print('１時間ごとに平均したデータをグラフにプロットします。')
     print('どのノードのプロットしますか？')
-    node_id = input('ノードの Identifier(例: tochigi_iot_999): ')
+    node_id = input('ノードの Identifier(例: tochigi_mqtt_999): ')
 
     print('いつのデータから表示しますか？')
     s_year = input('年(例: 2024): ')
@@ -120,3 +120,334 @@ def main():
     plt.show()
 main()
 ```
+
+`RealVNC Viewer`を使い、ターミナルから以下のコマンドを実行します。
+
+```bash
+pi@raspberrypi:~/python_sql $ python bme280_graph_show01.py
+```
+
+```bash
+１時間ごとに平均したデータをグラフにプロットします。
+どのノードのプロットしますか？
+ノードの Identifier(例: tochigi_mqtt_999): tochigi_mqtt_999
+いつのデータから表示しますか？
+年(例: 2024): 2024
+月(例: 09): 10
+日(例: 11): 01
+時(例: 00): 00
+2024-10-01 00:00:00のデータからから何行のデータを表示しますか？
+数値を入力(例: 5) : 100
+timestamp                identifier              temperature     humidity         pressure
+2024-10-01 14:56:13 ,    tochigi_mqtt_999 ,      25.720681818181824 ,    57.188636363636355 ,    991.3843181818179
+2024-10-01 16:16:03 ,    tochigi_mqtt_999 ,      25.228049242424262 ,    57.34327651515151 ,     990.5278030303031
+2024-10-01 17:00:03 ,    tochigi_mqtt_999 ,      25.504888888888868 ,    59.62190277777784 ,     990.2429999999996
+2024-10-01 18:00:03 ,    tochigi_mqtt_999 ,      26.034830769230744 ,    59.1392923076923 ,      990.4405230769238
+```
+
+次のようなグラフが表示されます。
+
+![Figure](../images/figure2.PNG)
+
+### 8.3 最新のデータの表示
+
+MariaDBから最新のデータを取得してグラフ化することを考えます。データの取得とグラフ化は前節の方法と同じ方法を用いれば実現できそうです。
+
+`bme280_graph_show02.py`
+
+```python
+#coding: utf-8
+
+#DB関連をまとめたモジュール
+import db_ambient_count02
+
+#グラフ表示関連
+import matplotlib.pyplot as plt
+import numpy as np
+
+def main():
+    #グラフのデータ
+    x = np.array([])
+    y = np.array([])
+
+    #DBサーバに接続する
+    db_ambient_count02.connect()
+
+    #クエリのパラメータを入力
+    #表示を開始する日付・時刻を入力する
+    print('最新のデータを表示します。')
+    print('どのノードのデータを表示しますか？')
+    node_id = input('ノードの Identifier(例:tochigi_mqtt_999): ')
+
+    print('何サンプル前のデータまで表示しますか？')
+    #入力したデータを数値に変換
+    limit_count = int(input('数値を入力(例: 100) : '))
+
+    #クエリを実施して結果を得る
+    result = db_ambient_count02.select_newest(node_id, limit_count)
+ 
+    #クエリの結果得られたデータを表示する
+    print( 'timestamp       \t', 'identifier        \t', 'temperature   \t', 'humidity  \t ', 'pressure')
+    for data in result:
+        print( data['timestamp'], ', \t', data['identifier'], ', \t', data['temperature'], ', \t', data['humidity'], ', \t', data['pressure'])
+        x = np.append(x, data['timestamp'])
+        y = np.append(y, data['temperature'])
+    
+    #グラフの設定をおこなう
+    fig, ax = plt.subplots()
+
+    plt.title('Temperature Trend')      #グラフのタイトルを指定
+    plt.xlabel('TimeStamp')             #Y軸のタイトルを指定
+    plt.ylabel('Temperature [deg. C.]') #X軸のタイトルを指定
+
+    labels = ax.get_xticklabels()
+    plt.setp(labels, rotation=90) #x軸のラベルを90度回転させる
+
+    plt.plot(x,y)    #グラフを描画する
+
+    #グラフを表示する
+    plt.show()
+main()
+
+```
+
+`db_ambient_count02.py`
+
+```python
+#coding: utf-8
+
+#モジュールをインポート
+import pymysql.cursors #PythonからDBを取扱う
+
+#DBへの接続情報
+DB_USER = 'iot_user'
+DB_PASS = 'password'
+DB_HOST = 'localhost'
+DB_NAME = 'iot_storage'
+
+#共通で使うオブジェクトを指すための準備
+sql_connection = None
+
+def connect():
+    global sql_connection
+
+    #DBサーバに接続する
+    sql_connection = pymysql.connect(
+        user = DB_USER,  #データベースにログインするユーザ名
+        passwd = DB_PASS,#データベースユーザのパスワード
+        host = DB_HOST,  #接続先DBのホストorIPアドレス
+        db = DB_NAME
+    )
+
+#データを追加する
+def insert_row(row):
+    #クエリの作成
+    query = "INSERT INTO Ambient(timestamp, identifier, temperature, humidity, pressure) " \
+            "VALUES(%(timestamp)s, %(identifier)s, %(temperature)s, %(humidity)s, %(pressure)s);"
+
+    #cursorオブジェクトのインスタンスを生成
+    sql_cursor = sql_connection.cursor()
+
+    #クエリを実行する
+    result = sql_cursor.execute(query, row)
+
+    #変更を実際に反映させる
+    sql_connection.commit()
+
+    return(result)
+
+#１時間毎に平均値を集計する
+def select_ave_one_hour(node_id, start_timestamp, limit_count):
+    #cursorオブジェクトのインスタンスを生成
+    sql_cursor = sql_connection.cursor()
+ 
+    #クエリに渡すパラメータを辞書にまとめる
+    param = {
+        'target_id' : node_id,
+        'target_timestamp' : start_timestamp,
+        'target_limit_count' : limit_count
+    };
+
+    #クエリのコマンド
+    query = 'SELECT timestamp, identifier, AVG(temperature), AVG(humidity) , AVG(pressure) '\
+            'FROM Ambient WHERE identifier=%(target_id)s '\
+            'AND timestamp >= %(target_timestamp)s '\
+            'GROUP BY CONCAT(YEAR(timestamp), MONTH(timestamp), DAY(timestamp), HOUR(timestamp)) '\
+            'ORDER BY timestamp ASC '\
+            'LIMIT %(target_limit_count)s;'
+
+    #クエリを実行する
+    sql_cursor.execute(query, param)
+
+    #クエリを実行した結果得られたデータを辞書にまとめ
+    #配列に追加する
+    array = []
+    for row in sql_cursor.fetchall():
+        dict = {
+            'timestamp' : row[0],
+            'identifier' : row[1],
+            'temperature' : row[2],
+            'humidity' : row[3],
+            'pressure' : row[4]
+        }
+        array.append(dict)
+    #データを格納した辞書の配列を返す
+    return(array)
+
+
+#最新のデータを取得する
+#node_id: 対象となるノードのidentifier
+#limit_count: 最新のデータから何サンプル取得するか
+def select_newest(node_id, limit_count):
+    #cursorオブジェクトのインスタンスを生成
+    sql_cursor = sql_connection.cursor()
+
+    #クエリに渡すパラメータを辞書にまとめる
+    param = {
+        'target_id' : node_id,
+        'target_limit_count' : limit_count
+    };
+
+    #クエリのコマンド
+    query = 'SELECT timestamp, identifier, temperature, humidity, pressure '\
+            'FROM Ambient WHERE identifier=%(target_id)s '\
+            'ORDER BY timestamp DESC '\
+            'LIMIT %(target_limit_count)s;'
+
+    #クエリを実行する
+    sql_cursor.execute(query, param)
+
+    #クエリを実行した結果得られたデータを辞書にまとめ
+    #配列に追加する
+    array = []
+    for row in sql_cursor.fetchall():
+        dict = {
+            'timestamp' : row[0],
+            'identifier' : row[1],
+            'temperature' : row[2],
+            'humidity' : row[3],
+            'pressure' : row[4]
+        }
+        array.append(dict)
+    #データを格納した辞書の配列を返す
+    return(array)
+```
+
+`RealVNC Viewer`を使い、ターミナルから以下のコマンドを実行します。
+
+```bash
+pi@raspberrypi:~/python_sql $ python bme280_graph_show02.py
+```
+
+```bash
+最新のデータを表示します。
+どのノードのデータを表示しますか？
+ノードの Identifier(例:tochigi_mqtt_999): tochigi_mqtt_999
+何サンプル前のデータまで表示しますか？
+数値を入力(例: 100) : 100
+timestamp                identifier              temperature     humidity         pressure
+2024-10-01 18:27:02 ,    tochigi_mqtt_999 ,      26.27 ,         58.84 ,         990.52
+2024-10-01 18:26:57 ,    tochigi_mqtt_999 ,      26.26 ,         58.63 ,         990.55
+2024-10-01 18:26:52 ,    tochigi_mqtt_999 ,      26.26 ,         58.74 ,         990.55
+2024-10-01 18:26:47 ,    tochigi_mqtt_999 ,      26.23 ,         58.77 ,         990.59
+2024-10-01 18:26:42 ,    tochigi_mqtt_999 ,      26.23 ,         58.57 ,         990.55
+2024-10-01 18:26:37 ,    tochigi_mqtt_999 ,      26.22 ,         58.46 ,         990.51
+2024-10-01 18:26:32 ,    tochigi_mqtt_999 ,      26.22 ,         58.64 ,         990.54
+2024-10-01 18:26:27 ,    tochigi_mqtt_999 ,      26.21 ,         58.38 ,         990.56
+2024-10-01 18:26:22 ,    tochigi_mqtt_999 ,      26.2 ,          58.39 ,         990.54
+2024-10-01 18:26:17 ,    tochigi_mqtt_999 ,      26.18 ,         58.62 ,         990.51
+2024-10-01 18:26:12 ,    tochigi_mqtt_999 ,      26.17 ,         58.16 ,         990.5
+2024-10-01 18:26:07 ,    tochigi_mqtt_999 ,      26.17 ,         58.74 ,         990.52
+2024-10-01 18:26:02 ,    tochigi_mqtt_999 ,      26.19 ,         58.36 ,         990.52
+2024-10-01 18:25:57 ,    tochigi_mqtt_999 ,      26.21 ,         58.28 ,         990.6
+2024-10-01 18:25:52 ,    tochigi_mqtt_999 ,      26.22 ,         58.94 ,         990.51
+2024-10-01 18:25:47 ,    tochigi_mqtt_999 ,      26.21 ,         59.07 ,         990.56
+2024-10-01 18:25:42 ,    tochigi_mqtt_999 ,      26.23 ,         58.67 ,         990.53
+2024-10-01 18:25:37 ,    tochigi_mqtt_999 ,      26.23 ,         58.9 ,          990.58
+2024-10-01 18:25:32 ,    tochigi_mqtt_999 ,      26.23 ,         58.56 ,         990.55
+2024-10-01 18:25:27 ,    tochigi_mqtt_999 ,      26.23 ,         59.07 ,         990.55
+2024-10-01 18:25:22 ,    tochigi_mqtt_999 ,      26.22 ,         58.62 ,         990.57
+2024-10-01 18:25:17 ,    tochigi_mqtt_999 ,      26.23 ,         58.98 ,         990.5
+2024-10-01 18:25:12 ,    tochigi_mqtt_999 ,      26.23 ,         58.76 ,         990.48
+2024-10-01 18:25:07 ,    tochigi_mqtt_999 ,      26.23 ,         58.73 ,         990.5
+2024-10-01 18:25:02 ,    tochigi_mqtt_999 ,      26.22 ,         58.65 ,         990.52
+2024-10-01 18:24:57 ,    tochigi_mqtt_999 ,      26.22 ,         58.98 ,         990.51
+2024-10-01 18:24:52 ,    tochigi_mqtt_999 ,      26.21 ,         58.96 ,         990.49
+2024-10-01 18:24:47 ,    tochigi_mqtt_999 ,      26.19 ,         58.75 ,         990.53
+2024-10-01 18:24:42 ,    tochigi_mqtt_999 ,      26.18 ,         58.62 ,         990.49
+2024-10-01 18:24:37 ,    tochigi_mqtt_999 ,      26.17 ,         58.68 ,         990.6
+2024-10-01 18:24:32 ,    tochigi_mqtt_999 ,      26.16 ,         58.75 ,         990.48
+2024-10-01 18:24:27 ,    tochigi_mqtt_999 ,      26.16 ,         58.63 ,         990.58
+2024-10-01 18:24:22 ,    tochigi_mqtt_999 ,      26.17 ,         58.5 ,          990.52
+2024-10-01 18:24:17 ,    tochigi_mqtt_999 ,      26.17 ,         58.67 ,         990.52
+2024-10-01 18:24:12 ,    tochigi_mqtt_999 ,      26.17 ,         58.68 ,         990.52
+2024-10-01 18:24:07 ,    tochigi_mqtt_999 ,      26.18 ,         58.84 ,         990.48
+2024-10-01 18:24:02 ,    tochigi_mqtt_999 ,      26.18 ,         58.53 ,         990.51
+2024-10-01 18:23:57 ,    tochigi_mqtt_999 ,      26.17 ,         58.8 ,          990.5
+2024-10-01 18:23:52 ,    tochigi_mqtt_999 ,      26.17 ,         59.01 ,         990.5
+2024-10-01 18:23:47 ,    tochigi_mqtt_999 ,      26.17 ,         58.9 ,          990.46
+2024-10-01 18:23:42 ,    tochigi_mqtt_999 ,      26.15 ,         58.38 ,         990.47
+2024-10-01 18:23:37 ,    tochigi_mqtt_999 ,      26.16 ,         58.98 ,         990.48
+2024-10-01 18:23:32 ,    tochigi_mqtt_999 ,      26.17 ,         58.46 ,         990.52
+2024-10-01 18:23:27 ,    tochigi_mqtt_999 ,      26.18 ,         58.74 ,         990.51
+2024-10-01 18:23:22 ,    tochigi_mqtt_999 ,      26.19 ,         58.8 ,          990.48
+2024-10-01 18:23:17 ,    tochigi_mqtt_999 ,      26.18 ,         58.83 ,         990.54
+2024-10-01 18:23:12 ,    tochigi_mqtt_999 ,      26.18 ,         58.7 ,          990.51
+2024-10-01 18:23:07 ,    tochigi_mqtt_999 ,      26.17 ,         58.94 ,         990.46
+2024-10-01 18:23:02 ,    tochigi_mqtt_999 ,      26.17 ,         58.97 ,         990.5
+2024-10-01 18:22:57 ,    tochigi_mqtt_999 ,      26.16 ,         59.16 ,         990.56
+2024-10-01 18:22:52 ,    tochigi_mqtt_999 ,      26.17 ,         58.59 ,         990.52
+2024-10-01 18:22:47 ,    tochigi_mqtt_999 ,      26.16 ,         58.56 ,         990.53
+2024-10-01 18:22:42 ,    tochigi_mqtt_999 ,      26.16 ,         58.53 ,         990.56
+2024-10-01 18:22:37 ,    tochigi_mqtt_999 ,      26.14 ,         58.88 ,         990.53
+2024-10-01 18:22:32 ,    tochigi_mqtt_999 ,      26.16 ,         58.5 ,          990.47
+2024-10-01 18:22:27 ,    tochigi_mqtt_999 ,      26.14 ,         58.79 ,         990.4
+2024-10-01 18:22:22 ,    tochigi_mqtt_999 ,      26.15 ,         58.67 ,         990.47
+2024-10-01 18:22:17 ,    tochigi_mqtt_999 ,      26.16 ,         58.33 ,         990.48
+2024-10-01 18:22:12 ,    tochigi_mqtt_999 ,      26.15 ,         58.97 ,         990.55
+2024-10-01 18:22:07 ,    tochigi_mqtt_999 ,      26.15 ,         58.49 ,         990.54
+2024-10-01 18:22:02 ,    tochigi_mqtt_999 ,      26.15 ,         58.68 ,         990.49
+2024-10-01 18:21:57 ,    tochigi_mqtt_999 ,      26.13 ,         58.75 ,         990.51
+2024-10-01 18:21:52 ,    tochigi_mqtt_999 ,      26.15 ,         59.1 ,          990.49
+2024-10-01 18:21:47 ,    tochigi_mqtt_999 ,      26.13 ,         58.91 ,         990.49
+2024-10-01 18:21:42 ,    tochigi_mqtt_999 ,      26.13 ,         58.78 ,         990.42
+2024-10-01 18:21:37 ,    tochigi_mqtt_999 ,      26.12 ,         58.8 ,          990.51
+2024-10-01 18:21:32 ,    tochigi_mqtt_999 ,      26.1 ,          58.71 ,         990.49
+2024-10-01 18:21:27 ,    tochigi_mqtt_999 ,      26.11 ,         58.87 ,         990.52
+2024-10-01 18:21:22 ,    tochigi_mqtt_999 ,      26.12 ,         58.9 ,          990.43
+2024-10-01 18:21:17 ,    tochigi_mqtt_999 ,      26.11 ,         59.04 ,         990.47
+2024-10-01 18:21:12 ,    tochigi_mqtt_999 ,      26.1 ,          59.12 ,         990.46
+2024-10-01 18:21:07 ,    tochigi_mqtt_999 ,      26.09 ,         58.74 ,         990.44
+2024-10-01 18:21:02 ,    tochigi_mqtt_999 ,      26.11 ,         58.67 ,         990.5
+2024-10-01 18:20:57 ,    tochigi_mqtt_999 ,      26.11 ,         58.83 ,         990.48
+2024-10-01 18:20:52 ,    tochigi_mqtt_999 ,      26.1 ,          58.8 ,          990.38
+2024-10-01 18:20:47 ,    tochigi_mqtt_999 ,      26.11 ,         58.78 ,         990.51
+2024-10-01 18:20:42 ,    tochigi_mqtt_999 ,      26.1 ,          58.55 ,         990.46
+2024-10-01 18:20:37 ,    tochigi_mqtt_999 ,      26.1 ,          59.12 ,         990.44
+2024-10-01 18:20:32 ,    tochigi_mqtt_999 ,      26.1 ,          58.82 ,         990.44
+2024-10-01 18:20:27 ,    tochigi_mqtt_999 ,      26.08 ,         58.61 ,         990.45
+2024-10-01 18:20:22 ,    tochigi_mqtt_999 ,      26.09 ,         59.39 ,         990.42
+2024-10-01 18:20:17 ,    tochigi_mqtt_999 ,      26.09 ,         59.02 ,         990.53
+2024-10-01 18:20:12 ,    tochigi_mqtt_999 ,      26.09 ,         59.13 ,         990.42
+2024-10-01 18:20:07 ,    tochigi_mqtt_999 ,      26.1 ,          59.14 ,         990.49
+2024-10-01 18:20:02 ,    tochigi_mqtt_999 ,      26.11 ,         58.74 ,         990.48
+2024-10-01 18:19:57 ,    tochigi_mqtt_999 ,      26.1 ,          58.54 ,         990.49
+2024-10-01 18:19:52 ,    tochigi_mqtt_999 ,      26.07 ,         58.88 ,         990.47
+2024-10-01 18:19:47 ,    tochigi_mqtt_999 ,      26.09 ,         58.82 ,         990.47
+2024-10-01 18:19:42 ,    tochigi_mqtt_999 ,      26.12 ,         59.08 ,         990.51
+2024-10-01 18:19:37 ,    tochigi_mqtt_999 ,      26.11 ,         58.72 ,         990.45
+2024-10-01 18:19:32 ,    tochigi_mqtt_999 ,      26.11 ,         59.09 ,         990.5
+2024-10-01 18:19:27 ,    tochigi_mqtt_999 ,      26.1 ,          58.67 ,         990.43
+2024-10-01 18:19:22 ,    tochigi_mqtt_999 ,      26.11 ,         59.09 ,         990.5
+2024-10-01 18:19:17 ,    tochigi_mqtt_999 ,      26.09 ,         59.01 ,         990.47
+2024-10-01 18:19:12 ,    tochigi_mqtt_999 ,      26.09 ,         59.08 ,         990.52
+2024-10-01 18:19:07 ,    tochigi_mqtt_999 ,      26.07 ,         58.91 ,         990.44
+2024-10-01 18:19:02 ,    tochigi_mqtt_999 ,      26.08 ,         59.2 ,          990.45
+2024-10-01 18:18:57 ,    tochigi_mqtt_999 ,      26.06 ,         59.3 ,          990.4
+2024-10-01 18:18:52 ,    tochigi_mqtt_999 ,      26.05 ,         59.03 ,         990.46
+2024-10-01 18:18:47 ,    tochigi_mqtt_999 ,      26.03 ,         59.13 ,         990.43
+```
+
+次のようなグラフが表示されます。
+
+![Figure](../images/figure3.PNG)
