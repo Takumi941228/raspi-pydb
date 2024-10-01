@@ -703,10 +703,11 @@ def main():
     print('どのノードのデータを表示しますか？')
     node_id = input('ノードのIdentifier(例: tochigi_mqtt_999): ')
 
-    print('いつのデータから表示しますか？') s_year = input('年(例: 2020): ')
-    s_month = input('月(例: 01): ')
-    s_day = input('日(例: 21): ')
-    s_hour = input('時(例: 02): ')
+    print('いつのデータから表示しますか？')
+    s_year = input('年(例: 2024): ')
+    s_month = input('月(例: 09): ')
+    s_day = input('日(例: 19): ')
+    s_hour = input('時(例: 00): ')
     datetime_start = f'{s_year}-{s_month}-{s_day} {s_hour}:00:00'
     print(f'{datetime_start}のデータからから何行のデータを表示しますか？')
 
@@ -716,5 +717,111 @@ def main():
     #クエリを実施して結果を得る
     result = db_ambient_count01.select_ave_one_hour(node_id, datetime_start, limit_count)
 
-#クエリの結果得られたデータを表示する
+    #クエリの結果得られたデータを表示する
+    print( 'timestamp       \t', 'identifier        \t', 'temperature   \t', 'humidity  \t', 'pressure')
+    for data in result:
+        print( data['timestamp'], ', \t', data['identifier'], ', \t', round(data['temperature'], 2), ', \t', round(data['humidity'], 2), ', \t', round(data['pressure'], 2))
+main()
+```
+
+`db_ambient_count01.py`
+
+```python
+#coding: utf-8
+
+#モジュールをインポート
+import pymysql.cursors #PythonからDBを取扱う
+
+#DBへの接続情報
+DB_USER = 'iot_user'
+DB_PASS = 'password'
+DB_HOST = 'localhost'
+DB_NAME = 'iot_storage'
+
+#共通で使うオブジェクトを指すための準備
+sql_connection = None
+
+def connect():
+    global sql_connection
+
+    #DBサーバに接続する
+    sql_connection = pymysql.connect(
+        user = DB_USER,  #データベースにログインするユーザ名
+        passwd = DB_PASS,#データベースユーザのパスワード
+        host = DB_HOST,  #接続先DBのホストorIPアドレス
+        db = DB_NAME
+    )
+
+#データを追加する
+def insert_row(row):
+    #クエリの作成
+    query = "INSERT INTO Ambient(timestamp, identifier, temperature, humidity, pressure)" \
+            "VALUES(%(timestamp)s, %(identifier)s, %(temperature)s, %(humidity)s, %(pressure)s);"
+
+    #cursorオブジェクトのインスタンスを生成
+    sql_cursor = sql_connection.cursor()
+
+    #クエリを実行する
+    result = sql_cursor.execute(query, row)
+
+    #変更を実際に反映させる
+    sql_connection.commit()
+
+    return(result)
+
+#１時間毎に平均値を集計する
+def select_ave_one_hour(node_id, start_timestamp, limit_count):
+    #cursorオブジェクトのインスタンスを生成
+    sql_cursor = sql_connection.cursor()
+
+    #クエリに渡すパラメータを辞書にまとめる
+    param = {
+        'target_id' : node_id,
+        'target_timestamp' : start_timestamp,
+        'target_limit_count' : limit_count
+    };
+
+    #クエリのコマンド
+    query = 'SELECT timestamp, identifier, AVG(temperature), AVG(humidity) , AVG(pressure) '\
+            'FROM Ambient WHERE identifier=%(target_id)s '\
+            'AND timestamp >= %(target_timestamp)s '\
+            'GROUP BY CONCAT(YEAR(timestamp), MONTH(timestamp), DAY(timestamp), HOUR(timestamp)) '\
+            'ORDER BY timestamp ASC '\
+            'LIMIT %(target_limit_count)s;'
+
+    #クエリを実行する
+    sql_cursor.execute(query, param)
+
+    #クエリを実行した結果得られたデータを辞書にまとめ
+    #配列に追加する
+    array = []
+    for row in sql_cursor.fetchall():
+        dict = {
+            'timestamp' : row[0],
+            'identifier' : row[1],
+            'temperature' : row[2],
+            'humidity' : row[3],
+            'pressure' : row[4]
+        }
+    array.append(dict)
+
+    #データを格納した辞書の配列を返す
+    return(array)
+```
+
+実行結果は次のようになります。
+
+```bash
+１時間ごとに平均したデータを表示します。
+どのノードのデータを表示しますか？
+ノードのIdentifier(例: tochigi_mqtt_999): tochigi_mqtt_999
+いつのデータから表示しますか？
+年(例: 2024): 2024
+月(例: 09): 09
+日(例: 19): 19
+時(例: 00): 00
+2024-09-19 00:00:00のデータからから何行のデータを表示しますか？
+数値を入力(例: 5) : 5
+timestamp                identifier              temperature     humidity        pressure
+2024-09-19 15:00:01 ,    tochigi_mqtt_999 ,      27.36 ,         41.02 ,         1000.69
 ```
