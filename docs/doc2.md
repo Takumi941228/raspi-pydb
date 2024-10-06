@@ -267,11 +267,15 @@ RaspberryPi のメニューより「RaspberryPi の設定」を開き、イン�
 
 ~~まず、aptパッケージのアップデートをします。~~
 
-~~pi@raspberrypi:~ $ sudo apt update~~
+```bash
+pi@raspberrypi:~ $ sudo apt update
+```
 
-~~pi@raspberrypi:~ $ sudo apt -y upgrade~~
+```bash
+pi@raspberrypi:~ $ sudo apt -y upgrade
+```
 
-* インストールにかなり時間がかかってしまうので、割愛します。
+* <span style="color: red; ">インストールにかなり時間がかかってしまうので、割愛します。</span>
     * aptパッケージの更新をしないと既存のパッケージでは、本実習を実施できない可能性もあります。
 
 本実習では、実行環境として`Python3.11`を利用します。
