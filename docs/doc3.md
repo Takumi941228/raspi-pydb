@@ -19,7 +19,26 @@ pi@raspberrypi:~ $ sudo mariadb -u root
 MariaDB[(none)]> CREATE DATABASE practice CHARACTER SET utf8mb4;
 ```
 
-#### 3.1.2 ユーザの作成
+#### 3.1.2 データベースの確認
+
+```sql
+MariaDB [none]> SHOW databases;
+```
+
+```bash
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| practice           |
+| sys                |
++--------------------+
+5 rows in set (0.001 sec)
+```
+
+#### 3.1.3 ユーザの作成
 
 ユーザ名`iot_user`と`iot_admin`を作成する。
 
@@ -31,7 +50,7 @@ MariaDB [(none)]> CREATE user 'iot_user'@'localhost' identified by '任意のパ
 MariaDB [(none)]> CREATE user 'iot_admin'@'localhost' identified by '任意のパスワード';
 ```
 
-#### 3.1.3 ユーザの確認
+#### 3.1.4 ユーザの確認
 
 ```sql
 MariaDB [(none)]> SELECT host, user from mysql.user;
@@ -52,13 +71,25 @@ MariaDB [(none)]> SELECT host, user from mysql.user;
 5 rows in set (0.002 sec)
 ```
 
-#### 3.1.4 権限の付与
+#### 3.1.5 権限の付与
 
 ユーザ`iot_user`と`iot_admin`に、データベース`practice`に関する操作の権限を付与します。
 
 `iot_user`は一般ユーザとして取り扱い、`iot_admin`は管理者ユーザとして取り扱います。
 
 次のコマンドは、`iot_user`に関する権限を付与します。付与する権限は、データベース`practice`に対する、一般的なSQLコマンドの使用です。
+
+権限の種類について説明します。
+
+権限名は、以下から指定します。
+
+|定義|内容|
+|---|---|
+|SELECT|参照|
+|INSERT|行の追加|
+|DELETE|行の削除|
+|UPDATE|値の変更|
+|ALL PRIVILEGES|上記全て|
 
 ```sql
 MariaDB [(none)]> GRANT select, update, insert, delete ON practice.* TO 'iot_user'@'localhost';
@@ -70,7 +101,9 @@ MariaDB [(none)]> GRANT select, update, insert, delete ON practice.* TO 'iot_use
 MariaDB [(none)]> GRANT ALL PRIVILEGES ON practice.* TO 'iot_admin'@'localhost';
 ```
 
-#### 3.1.5 権限の確認
+#### 3.1.6 権限の確認
+
+以下のコマンドを実行し、付与された権限を確認します。
 
 ```sql
 MariaDB [practice]> SHOW grants for iot_user@localhost;
@@ -100,26 +133,9 @@ MariaDB [(none)]> SHOW grants for iot_admin@localhost;
 2 rows in set (0.000 sec)
 ```
 
-#### 3.1.6 データベースの確認
-
-```sql
-MariaDB [none]> SHOW databases;
-```
-
-```bash
-+--------------------+
-| Database           |
-+--------------------+
-| information_schema |
-| mysql              |
-| performance_schema |
-| practice           |
-| sys                |
-+--------------------+
-5 rows in set (0.001 sec)
-```
-
 #### 3.1.7 データベースの選択
+
+以下のコマンドを実行し、作成した`practice`データベースに入り、操作できるようにします。
 
 ```sql
 MariaDB [none]> use practice;
@@ -151,6 +167,8 @@ MariaDB [practice]> CREATE TABLE
 
 #### 3.1.9 テーブルの確認
 
+以下のコマンドを実行し、作成したテーブルの確認をします。
+
 ```sql
 MariaDB [practice]> show tables;
 ```
@@ -164,7 +182,7 @@ MariaDB [practice]> show tables;
 1 row in set (0.001 sec)
 ```
 
-#### 3.1.10 テーブルの確認
+#### 3.1.10 テーブルデータの確認
 
 ```sql
 MariaDB [practice]> show fields from BankAccount;
