@@ -2,6 +2,8 @@
 
 ## 6. MQTT経由のデータの取得と蓄積
 
+屋内に設置したESP32デバイスからのデータを受信することを考えます。データの取得はMQTTプロトコルを使用します。MQTT通信は、校内に設置したMQTTブローカを利用することを想定しています。
+
 ### 6.1 MQTTとは
 
 MQTT(Message Queue Telemetry Transport)とは、「ブローカ」と呼ばれる仲介サーバがネットワーク上に存在し、「パブリッシャ」と呼ばれる送信デバイスと「サブスクライバ」と呼ばれる受信デバイスが複数存在する。パブリッシャから送信されるデータには、「トピック」と呼ばれる区別文字列とデータが含まれている。個々のサブスクライバは、どのトピックを受信するかをブローカに登録し、常時ブローカと接続をしておきます。ブローカは、パブリッシャからデータを受信したら、そのトピックを判定して、そのトピックに登録されているサブスクライバの全てに送信します。これで、サブスクライバは特定のパブリッシャからのデータのみを受信することになる。MQTTのメッセージ構成は簡単で、高速で送受信ができるようになっていて、かつ軽量なので、IoTなどに使われる非力なプロッサでも対応でき、今日よくつかわれようになっています。
@@ -12,41 +14,9 @@ MQTT(Message Queue Telemetry Transport)とは、「ブローカ」と呼ばれ�
 
 #### 6.1.1 MQTTの通信の仕組み
 
-MQTTの手順で、Wi-Fiなどのネットワーク通信を用いてESP32とPC間の通信を行います。データを送信するデバイスは、ブローカと呼ばれるサーバにデータの種類を示す`topic`などと共に短い送信データを送ります。サーバは、`topic`を指定することで、受信を要望するデバイスにサーバで受信したデータのうち、要求に該当するデータを要求してきたデバイスに送信します。今回はTopicを `esp32/bme` とし，ESP32がpublisherとなりデータの送信を行い、データの取得する。
+MQTTの手順で、Wi-Fiなどのネットワーク通信を用いてESP32とPC間の通信を行います。データを送信するデバイスは、ブローカと呼ばれるサーバにデータの種類を示す`topic`などと共に短い送信データを送ります。サーバは、`topic`を指定することで、受信を要望するデバイスにサーバで受信したデータのうち、要求に該当するデータを要求してきたデバイスに送信します。今回はTopicを`esp32/bme`とし，ESP32がpublisherとなりデータの送信を行い、データの取得する。
 
 ![MQTT](../images/mqtt2.PNG)
-
-#### 6.1.2 MQTTブローカーの構築
-
-データの取得に使用するプロトコルであるMQTT通信を行うため、`mosquito`をインストールします。
-
-```bash
-pi@raspberrypi:~/python_sql $ sudo apt -y install mosquitto
-```
-
-```bash
-pi@raspberrypi:~/python_sql $ sudo systemctl status mosquitto.service
-```
-
-```bash
-● mosquitto.service - Mosquitto MQTT Broker
-     Loaded: loaded (/lib/systemd/system/mosquitto.service; enabled; preset: enabled)
-     Active: active (running) since Wed 2024-09-11 16:16:30 JST; 1min 2s ago
-       Docs: man:mosquitto.conf(5)
-             man:mosquitto(8)
-    Process: 6633 ExecStartPre=/bin/mkdir -m 740 -p /var/log/mosquitto (code=exited, status=0/SUCCESS)
-    Process: 6641 ExecStartPre=/bin/chown mosquitto /var/log/mosquitto (code=exited, status=0/SUCCESS)
-    Process: 6642 ExecStartPre=/bin/mkdir -m 740 -p /run/mosquitto (code=exited, status=0/SUCCESS)
-    Process: 6643 ExecStartPre=/bin/chown mosquitto /run/mosquitto (code=exited, status=0/SUCCESS)
-   Main PID: 6644 (mosquitto)
-      Tasks: 1 (limit: 3910)
-        CPU: 50ms
-     CGroup: /system.slice/mosquitto.service
-             └─6644 /usr/sbin/mosquitto -c /etc/mosquitto/mosquitto.conf
-
- 9月 11 16:16:30 raspberrypi systemd[1]: Starting mosquitto.service - Mosquitto MQTT Broker...
- 9月 11 16:16:30 raspberrypi systemd[1]: Started mosquitto.service - Mosquitto MQTT Broker.
-```
 
 ### 6.2 Mosquittoクライアントからのデータ取得
 
@@ -60,7 +30,7 @@ MQTT通信の接続テストを行います。
 pi@raspberrypi:~/python_sql $ sudo apt -y install mosquitto-clients
 ```
 
-MQTTブローカに接続して、データを取得します。コマンドを入力し、MQTTサブスクライバを起動します。コマンドの書式は、次のとおりです。
+MQTTブローカに接続して、データを取得します。コマンドを入力し、MQTTサブスクライバを起動します。コマンドの書式は、次のとおりです。今回は、実習場内に設置したRaspberryPiをMQTTブローカとして、利用します。接続先サーバには、MQTTブローカとして動作しているRaspberryPiのIPアドレスを設定します。
 
 <code>mosquitto_sub -h 接続先サーバ -p ポート番号 -t トピック名</code>
 
@@ -72,8 +42,9 @@ MQTTブローカに接続して、データを取得します。コマンドを�
 | -p | ポート番号 | -p 1883 |
 | -t | トピック名 | -t device/tochigi |
 
+
 ```bash
-pi@raspberrypi:~/python_sql $ mosquitto_sub -h localhost -p 1883 -t test
+pi@raspberrypi:~/python_sql $ mosquitto_sub -h xx.xx.xx.xx -p 1883 -t test
 ```
 
 ```bash
@@ -90,10 +61,10 @@ Subscribed (mid: 1): 0
 
 * ターミナル２の操作
 
-MQTTブローカに接続して、データを送信します。コマンドを入力し、MQTTパブリッシャを起動します。コマンドの書式は、次のとおりです。
+MQTTブローカに接続して、データを送信します。コマンドを入力し、MQTTパブリッシャを起動します。コマンドの書式は、次のとおりです。xxの部分は、MQTTブローカのIPアドレスを指定します。
 
 ```bash
-pi@raspberrypi:~/python_sql $ mosquitto_pub -h localhost -p 1883 -t test -m "Hello MQTT!"
+pi@raspberrypi:~/python_sql $ mosquitto_pub -h xx.xx.xx.xx -p 1883 -t test -m "Hello MQTT!"
 ```
 
 ```bash
@@ -183,7 +154,7 @@ Silicon Labs CP210x driverを以下のアドレスよりダウンロードして
 
 * 温湿度・気圧センサと小型LCD
 
-|信号名|AE-BME280| AE-AQM0802 |ESP32 GPIO|
+|信号名|AE-BME280|AE-AQM0802|ESP32 GPIO|
 |:-:|:-:|:-:|:-:|
 |SCL|SCK|SCL|22|
 |SDA|SDI|SDA|21|
@@ -268,15 +239,16 @@ Silicon Labs CP210x driverを以下のアドレスよりダウンロードして
 
 /* -------------------------定義分------------------------- */
 /* wifi config */
+/* 接続先wifiのSSIDとPASSを設定 */
 #define WIFI_SSID "ssid"
 #define WIFI_PASSWORD "password"
 
 /* MQTT config */
-#define MQTT_SERVER "Raspberry PiのIPアドレス"
+#define MQTT_SERVER "MQTTブローカのIPアドレス"  //例:xx.xx.xx.xx
 #define MQTT_PORT 1883
 #define MQTT_BUFFER_SIZE 256
 #define TOPIC "esp32/bme"
-#define DEVICE_ID "esp001"  // デバイスIDは機器ごとにユニーク
+#define DEVICE_ID "esp001"  //デバイスIDは機器ごとにユニーク
 
 /* PIN config */
 #define SW1 25
@@ -298,30 +270,30 @@ LCD_ST7032 lcd;
 Ticker tickerMeasure;
 
 /* MQTT用インスタンス作成 */
-// WiFiClientのクラスからこのプログラムで実際に利用するWiFiClientのオブジェクトをespClientとして作成
+//WiFiClientのクラスからこのプログラムで実際に利用するWiFiClientのオブジェクトをespClientとして作成
 WiFiClient espClient;
-// Clientからブローカへの通信を行うPublish、ブローカへデータの受信を要求するSubscribeの処理などの、MQTTの通信を行うためのPubsubClientのクラスから実際に処理を行うオブジェクトclientを作成
+//Clientからブローカへの通信を行うPublish、ブローカへデータの受信を要求するSubscribeの処理などの、MQTTの通信を行うためのPubsubClientのクラスから実際に処理を行うオブジェクトclientを作成
 PubSubClient client(espClient);
 
 /* MQTT Publish用変数 */
-// JSONのオブジェクトを時間、温度、湿度、気圧用に4つの項目のため作成
+//JSONのオブジェクトを時間、温度、湿度、気圧用に4つの項目のため作成
 const int message_capacity = JSON_OBJECT_SIZE(4);
-// 静的にJSONデータを生成するためにメモリを確保
+//静的にJSONデータを生成するためにメモリを確保
 StaticJsonDocument<message_capacity> json_message;
-// JSONデータを格納する文字型配列のサイズを256に設定
+//JSONデータを格納する文字型配列のサイズを256に設定
 char message_buffer[MQTT_BUFFER_SIZE];
 
 /* NTPサーバ用インスタンス作成 */
 WiFiUDP ntpUDP;                // UDP client
 NTPClient timeClient(ntpUDP);  // NTP client
 
-// 表示モード用変数
+//表示モード用変数
 unsigned int mode = 0;
 
 /* ------------------------------各種関数定義------------------------ */
 /* WiFiの設定及び接続 */
 void WiFi_init(void) {
-  // connect wifi
+  //connect wifi
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED) {
     Serial.println(".");
@@ -331,7 +303,7 @@ void WiFi_init(void) {
   Serial.println("");
   Serial.print("Connected : ");
   Serial.println(WiFi.localIP());
-  // sync Time
+  //sync Time
   configTime(3600L * 9, 0, "ntp.nict.jp", "ntp.jst.mfeed.ad.jp");
 }
 
@@ -340,7 +312,7 @@ void Mqtt_connect(void) {
   //サーバーへの接続を維持できるように、これを定期的に呼び出す必要がある
   client.loop();
 
-  // MQTT未接続の場合は，再接続
+  //MQTT未接続の場合は，再接続
   while (!client.connected()) {
     Serial.println("Mqtt Reconnecting");
     if (client.connect(DEVICE_ID)) {
@@ -355,7 +327,7 @@ void PublishSensorData(void) {
   //センサからデータの取得
   bme.readAllMeasurements(&measurements);
 
-  // シリアルモニタに取得時間とセンサデータを表示
+  //シリアルモニタに取得時間とセンサデータを表示
   Serial.println("Timestamp");
   Serial.println(timeClient.getFormattedTime());
   Serial.println("Humidity,Pressure,BME-Temp");
@@ -366,19 +338,19 @@ void PublishSensorData(void) {
   Serial.println(measurements.temperature, 2);
 
   /* ペイロードを作成して送信を行う．*/
-  // JSONデータをクリア
+  //JSONデータをクリア
   json_message.clear();
 
-  // JSONの項目をキーと値を添えてJSONを作成
+  //JSONの項目をキーと値を添えてJSONを作成
   json_message["timestamp"] = timeClient.getFormattedTime();
   json_message["humid"] = measurements.humidity;
   json_message["press"] = measurements.pressure / 100;
   json_message["temp"] = measurements.temperature;
 
-  // json_messageの中のJSONデータをJSON形式の文字列message_bufferとしてシリアライズ化（文字列に変換）
+  //json_messageの中のJSONデータをJSON形式の文字列message_bufferとしてシリアライズ化（文字列に変換）
   serializeJson(json_message, message_buffer, sizeof(message_buffer));
 
-  // トピックをesp32/bmeして、JSON形式の文字列をパブリッシュする
+  //トピックをesp32/bmeして、JSON形式の文字列をパブリッシュする
   client.publish(TOPIC, message_buffer);
 }
 
@@ -420,22 +392,22 @@ void setup() {
       ;  //Freeze
   }
 
-  // WiFi接続
+  //WiFi接続
   WiFi_init();
 
-  // インスタント化したオブジェクトclientの接続先のサーバを、アドレスとポート番号を設定
+  //インスタント化したオブジェクトclientの接続先のサーバを、アドレスとポート番号を設定
   client.setServer(MQTT_SERVER, MQTT_PORT);
 
-  // 5secごとにセンサデータを取得及びMQTTBrokerへPublish
+  //5secごとにセンサデータを取得及びMQTTBrokerへPublish
   tickerMeasure.attach_ms(5000, PublishSensorData);
 
-  // ST7032設定
+  //ST7032設定
   lcd.begin();
   lcd.setcontrast(20);
 
   //ntp設定
-  timeClient.begin();               // init NTP
-  timeClient.setTimeOffset(32400);  // 0= GMT, 3600 = GMT+1, 32400 = GMT+9
+  timeClient.begin();               //init NTP
+  timeClient.setTimeOffset(32400);  //0= GMT, 3600 = GMT+1, 32400 = GMT+9
 
   //PIN設定
   pinMode(SW1, INPUT_PULLUP);
@@ -448,8 +420,8 @@ void setup() {
 
 /* loop関数 */
 void loop() {
-  Mqtt_connect();  // MQTTBrokerへの接続
-  Switch_check();  // タクトSWの状態読取り
+  Mqtt_connect();       //MQTTBrokerへの接続
+  Switch_check();       //タクトSWの状態読取り
   timeClient.update();  //ntp更新
 
   switch (mode) {
@@ -491,17 +463,10 @@ void loop() {
 実行結果は次のようになります。
 
 ```bash
-pi@raspberrypi:~/python_sql $ mosquitto_sub -h localhost -p 1883 -t esp32/bme
+pi@raspberrypi:~/python_sql $ mosquitto_sub -h xx.xx.xx.xx -p 1883 -t esp32/bme
 ```
 
 ```bash
-pi@raspberrypi:~/python_sql $ mosquitto_sub -d -h localhost -p 1883 -t esp32/bme
-Client (null) sending CONNECT
-Client (null) received CONNACK (0)
-Client (null) sending SUBSCRIBE (Mid: 1, Topic: esp32/bme, QoS: 0, Options: 0x00)
-Client (null) received SUBACK
-Subscribed (mid: 1): 0
-Client (null) received PUBLISH (d0, q0, r0, m0, 'esp32/bme', ... (83 bytes))
 {"timestamp":"19:01:01","humid":47.76269531,"press":1002.090454,"temp":27.37000084}
 ```
 
@@ -527,7 +492,7 @@ pi@raspberrypi:~/python_sql $ sudo apt -y install python3-paho-mqtt
 #PahoのMQTTライブラリを使用する
 import paho.mqtt.client as mqtt
 
-MQTT_HOST = 'Raspberry PiのIPアドレス'
+MQTT_HOST = 'MQTTブローカのIPアドレス'
 MQTT_PORT = 1883
 MQTT_TOPIC = 'esp32/bme'
 
@@ -580,7 +545,7 @@ import json
 from datetime import datetime as dt 
 
 #MQTTブローカへの接続に必要な情報
-MQTT_HOST = 'Raspberry PiのIPアドレス'
+MQTT_HOST = 'MQTTブローカのIPアドレス'
 MQTT_PORT = 1883
 MQTT_TOPIC = 'esp32/bme'
 #mqttClientを指すための変数を用意
@@ -608,7 +573,7 @@ def on_message(client, userdata, msg):
   temp_raw = json_msg["temp"]
 
   #各データを扱いやすい形に変換
-  date = str(dt.today().strftime('%Y-%m-%d')) + " " + str(date_raw)　#日付と時間を文字列連結
+  date = str(dt.today().strftime('%Y-%m-%d')) + " " + str(date_raw) #日付と時間を文字列連結
   #小数点第二位で四捨五入
   temp = round(temp_raw, 2)
   humi = round(humi_raw, 2)
@@ -674,10 +639,10 @@ from datetime import datetime as dt
 import db_ambient
 
 #このノードを識別するID
-NODE_IDENTIFIER = 'tochigi_mqtt_999';
+NODE_IDENTIFIER = 'tochigi_mqtt_999'
 
 #MQTTブローカへの接続に必要な情報
-MQTT_HOST = 'Raspberry PiのIPアドレス'
+MQTT_HOST = 'MQTTブローカのIPアドレス'
 MQTT_PORT = 1883
 MQTT_TOPIC = 'esp32/bme'
 #mqttClient を指すための変数を用意
@@ -712,12 +677,12 @@ def on_message(client, userdata, msg):
 
   #DBに渡すための新しいディクショナリ形式にまとめる。
   new_row ={
-            "timestamp" : date,
-            "identifier" : NODE_IDENTIFIER,
-            "temperature" : temp,
-            "humidity" : humi,
-            "pressure" : press
-            };
+    "timestamp" : date,
+    "identifier" : NODE_IDENTIFIER,
+    "temperature" : temp,
+    "humidity" : humi,
+    "pressure" : press
+  };
 
   #データベースの操作を行う------
   db_result = db_ambient.insert_row(new_row)
@@ -811,12 +776,12 @@ NODE_IDENTIFIER = 'tochigi_mqtt_999';
 def on_mqtt_data_arrive(new_data):
   #DBに渡すための新しいディクショナリ形式にまとめる。
   new_row ={
-            'timestamp' : new_data['timestamp'],
-            'identifier' : NODE_IDENTIFIER,
-            'temperature' : new_data['temperature'],
-            'humidity' : new_data['humidity'],
-            'pressure' : new_data['pressure']
-          };
+    'timestamp' : new_data['timestamp'],
+    'identifier' : NODE_IDENTIFIER,
+    'temperature' : new_data['temperature'],
+    'humidity' : new_data['humidity'],
+    'pressure' : new_data['pressure']
+  };
 
   #データベースの操作を行う------
   db_result = db_ambient.insert_row(new_row)
@@ -860,10 +825,10 @@ from datetime import datetime as dt
 import db_ambient
 
 #このノードを識別するID
-NODE_IDENTIFIER = 'tochigi_mqtt_999';
+NODE_IDENTIFIER = 'tochigi_mqtt_999'
 
 #MQTTブローカへの接続に必要な情報
-MQTT_HOST = 'Raspberr PiのIPアドレス'
+MQTT_HOST = 'MQTTブローカのIPアドレス'
 MQTT_PORT = 1883
 MQTT_TOPIC = 'esp32/bme'
 #mqttClient を指すための変数を用意
@@ -892,7 +857,7 @@ def on_message(client, userdata, msg):
   temp_raw = json_msg["temp"]
   
   #各データを扱いやすい形に変換
-  date = str(dt.today().strftime('%Y-%m-%d')) + " " + str(date_raw)　#日付と時間を文字列連結
+  date = str(dt.today().strftime('%Y-%m-%d')) + " " + str(date_raw) #日付と時間を文字列連結
   #小数点第二位で四捨五入
   temp = round(temp_raw, 2)
   humi = round(humi_raw, 2)
@@ -900,11 +865,11 @@ def on_message(client, userdata, msg):
 
   #データをディクショナリ形式にまとめる
   new_data ={
-              'timestamp' : date,
-              'temperature' : temp,
-              'humidity' : humi,
-              'pressure' : press
-            };
+    'timestamp' : date,
+    'temperature' : temp,
+    'humidity' : humi,
+    'pressure' : press
+  };
 
   handler_on_mqtt_data_arrive(new_data)
 

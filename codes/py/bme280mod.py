@@ -1,7 +1,5 @@
 #coding: utf-8
 
-#bme280mod.py:BME280 を簡単に取扱うためのモジュール
-
 from smbus2 import SMBus
 import time
 

@@ -67,4 +67,5 @@ def main():
 
         #次の更新周期まで待つ
         plt.pause(update_cycle)
+
 main()

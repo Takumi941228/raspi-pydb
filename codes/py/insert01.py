@@ -1,14 +1,12 @@
 #coding: utf-8
-import pymysql.cursors #Python から DB を利用するためのモジュールを利用
 
-#insert01.py
-#テーブルにデータを挿入する
+import pymysql.cursors #PythonからDBを利用するためのモジュールを利用
 
 def main():
-    #DB サーバに接続する
+    #DBサーバに接続する
     sql_connection = pymysql.connect(
-        user='iot_user', #データベースにログインするユーザ名
-        passwd='Passw0rd', #データベースユーザのパスワード
+        user='iot_user',  #データベースにログインするユーザ名
+        passwd='password',#データベースユーザのパスワード
         host='localhost', #接続先DBのホストorIPアドレス
         db='practice'
     )
@@ -40,5 +38,6 @@ def main():
     print( 'account_id \t', 'first_name \t', 'last_name \t', 'balance \t ','atm_count')
     #クエリを実行した結果得られたデータを1行ずつ表示する
     for row in sql_cursor.fetchall():
-        print( row[0], ',\t', row[1], ',\t', row[2], ',\t', row[3], ',\t', row[4])
+        print( row[0], ', \t', row[1], ', \t', row[2], ', \t', row[3], ', \t', row[4])
+
 main()

@@ -1,18 +1,16 @@
-#coding: utf-8 import sys
-import pymysql.cursors #Python から DB を利用するためのモジュールを利用
+#coding: utf-8
 
-#input02.py:
-#ユーザが入力したデータをテーブルに挿入する#(クエリとデータを分離）
+import pymysql.cursors #PythonからDBを利用するためのモジュールを利用
 
 def main():
-    #DB サーバに接続する
+    #DBサーバに接続する
     sql_connection = pymysql.connect(
-        user='iot_user', #データベースにログインするユーザ名
-        passwd='Passw0rd',#データベースユーザのパスワード
-        host='localhost', #接続先 DB のホストorIPアドス
+        user='iot_user',  #データベースにログインするユーザ名
+        passwd='password',#データベースユーザのパスワード
+        host='localhost', #接続先DBのホストorIPアドス
         db='practice'
     )
-    #cursor オブジェクトのインスタンスを生成
+    #cursorオブジェクトのインスタンスを生成
     sql_cursor = sql_connection.cursor()
 
     #テーブルにデータを挿入する
@@ -30,7 +28,7 @@ def main():
 
     print('実行するクエリ: ' + query1)
     
-    #クエリを実行。変更した row の数が戻り値となる
+    #クエリを実行。変更したrowの数が戻り値となる
     result1 = sql_cursor.execute(query1, (new_account_id, new_first_name, new_last_name, new_balance, new_atm_count))
 
     print('クエリを実行しました。('+ str(result1) +' row affected.)')
@@ -48,7 +46,7 @@ def main():
 
     print('クエリを実行しました。('+ str(result2) +' row affected.)')
 
-    print( 'account_id \t', 'first_name \t', 'last_name \t', 'balance \t ','atm_count') #クエリを実行した結果得られたデータを 1行ずつ表示する
+    print( 'account_id \t', 'first_name \t', 'last_name \t', 'balance \t ','atm_count') #クエリを実行した結果得られたデータを1行ずつ表示する
     for row in sql_cursor.fetchall():
-        print( row[0], ',\t', row[1], ',\t', row[2], ',\t', row[3], ',\t', row[4])
-main() 
+        print( row[0], ', \t', row[1], ', \t', row[2], ', \t', row[3], ', \t', row[4])
+main()

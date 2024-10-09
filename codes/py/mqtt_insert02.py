@@ -14,12 +14,12 @@ NODE_IDENTIFIER = 'tochigi_mqtt_999';
 def on_mqtt_data_arrive(new_data):
   #DBに渡すための新しいディクショナリ形式にまとめる。
   new_row ={
-            'timestamp' : new_data['timestamp'],
-            'identifier' : NODE_IDENTIFIER,
-            'temperature' : new_data['temperature'],
-            'humidity' : new_data['humidity'],
-            'pressure' : new_data['pressure']
-          };
+    'timestamp' : new_data['timestamp'],
+    'identifier' : NODE_IDENTIFIER,
+    'temperature' : new_data['temperature'],
+    'humidity' : new_data['humidity'],
+    'pressure' : new_data['pressure']
+  };
 
   #データベースの操作を行う------
   db_result = db_ambient.insert_row(new_row)

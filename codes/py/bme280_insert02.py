@@ -6,9 +6,8 @@ import time            #時間を取扱う
 import datetime        #日付と時刻を取扱う
 import pymysql.cursors #PythonからDBを取扱う
 
-
 #このノードを識別するID
-NODE_IDENTIFIER = 'tochigi_iot_999';
+NODE_IDENTIFIER = 'tochigi_iot_999'
 
 def main():
     #モジュール内に定義されているメソッドを呼び出す
@@ -20,28 +19,27 @@ def main():
     data = bme280mod.get_data() #データを取得
 
     #ディクショナリからデータを取得
-    new_temp = round(data['temperature'], 2) #小数点以下 2 桁で丸め
-    new_hum	= round(data['humidity'], 2)
+    new_temp = round(data['temperature'], 2) #小数点以下2桁で丸め
+    new_hum = round(data['humidity'], 2)
 
     new_press = round(data['pressure'], 2)
     new_timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S ")
 
-    #DB に渡すための新しいディクショナリ形式にまとめる。
+    #DBに渡すための新しいディクショナリ形式にまとめる。
     new_row ={"timestamp" : new_timestamp, "identifier" : NODE_IDENTIFIER, "temperature": new_temp, "humidity": new_hum,"pressure": new_press};
 
     print(f'{new_timestamp}, {new_temp:.2f}, {new_hum:.2f}, {new_press:.2f}')
 
     #データベースの操作を行う------
-
     #DB サーバに接続する
     sql_connection = pymysql.connect(
-        user='iot_user', #データベースにログインするユーザ名
-        passwd='Passw0rd',#データベースユーザのパスワード
+        user='iot_user',  #データベースにログインするユーザ名
+        passwd='password',#データベースユーザのパスワード
         host='localhost', #接続先DBのホストorIPアドレス
         db='iot_storage'
     )
 
-    #cursor オブジェクトのインスタンスを生成
+    #cursorオブジェクトのインスタンスを生成
     sql_cursor = sql_connection.cursor()
     print('●クエリの実行(データの挿入)')
 
@@ -54,10 +52,10 @@ def main():
     
     print('実行するクエリ: ' + query1)
 
-    #クエリを実行した。変更した row の数が戻り値となる
+    #クエリを実行した。変更したrowの数が戻り値となる
     print('クエリを実行しました。('+ str(result1) +' row affected.)')
 
     #変更を実際に反映させる
     sql_connection.commit()
-
+    
 main()

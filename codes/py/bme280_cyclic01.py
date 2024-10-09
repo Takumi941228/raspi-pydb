@@ -24,4 +24,5 @@ def main():
         print(f'{datetime_now},    {temp:.2f},    {hum:.2f},    {press:.2f}')
 
         time.sleep(10)
+        
 main()

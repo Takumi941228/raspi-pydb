@@ -1,14 +1,13 @@
 #coding: utf-8
 
 #モジュールをインポート
-import bme280mod #BME280センサ関連を取扱う
-import time      #時間を取扱う
-import datetime  #日付と時刻を取扱う
+import bme280mod       #BME280センサ関連を取扱う
+import time            #時間を取扱う
+import datetime        #日付と時刻を取扱う
 import pymysql.cursors #PythonからDBを取扱う
 
-
 #このノードを識別するID
-NODE_IDENTIFIER = 'tochigi_iot_999';
+NODE_IDENTIFIER = 'tochigi_iot_999'
 
 def main():
     #モジュール内に定義されているメソッドを呼び出す
@@ -27,15 +26,16 @@ def main():
     new_timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     print(f'{new_timestamp}, {new_temp:.2f}, {new_hum:.2f}, {new_press:.2f}') #データベースの操作を行う
-    #DB サーバに接続する
+    
+    #DBサーバに接続する
     sql_connection = pymysql.connect(
-        user='iot_user', #データベースにログインするユーザ名
-        passwd='Passw0rd', #データベースユーザのパスワード
-        host='localhost', #接続先DBのホストorIPアドレス
+        user='iot_user',    #データベースにログインするユーザ名
+        passwd='password',  #データベースユーザのパスワード
+        host='localhost',   #接続先DBのホストorIPアドレス
         db='iot_storage'
     )
 
-    #cursor オブジェクトのインスタンスを生成
+    #cursorオブジェクトのインスタンスを生成
     sql_cursor = sql_connection.cursor()
     print('●クエリの実行(データの挿入)')
     #クエリを指定する。実データは後から指定する。
@@ -47,7 +47,7 @@ def main():
 
     print('実行するクエリ: ' + query1)
 
-    #クエリを実行した。変更した row の数が戻り値となる
+    #クエリを実行した。変更したrowの数が戻り値となる
     print('クエリを実行しました。('+ str(result1) +' row affected.)')
 
     #変更を実際に反映させる

@@ -1,8 +1,5 @@
 #coding: utf-8
 
-#bme280_read02.py
-#モジュール化を行う
-
 #モジュールをインポート
 import bme280mod
 

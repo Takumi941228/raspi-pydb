@@ -499,6 +499,7 @@ def main():
     #クエリを実行した結果得られたデータを１行ずつ表示する
     for row in sql_cursor.fetchall():
         print(row[0], ', \t', row[1], ', \t', row[2], ', \t', row[3], ', \t', row[4])
+
 main()
 ```
 
@@ -566,6 +567,7 @@ def main():
     #クエリを実行した結果得られたデータを１行ずつ表示する
     for row in sql_cursor.fetchall():
         print(row[0], ', \t', row[1], ', \t', row[2], ', \t', row[3], ', \t', row[4])
+
 main()
 ```
 
@@ -597,6 +599,7 @@ timestamp                identifier              temperature     humidity       
 
 ```python
 #coding: utf-8
+
 import pymysql.cursors #PythonからDBを利用するためのモジュールを利用
 
 #DBへの接続情報
@@ -656,6 +659,7 @@ def main():
 
     for row in sql_cursor.fetchall():
         print( row[0], ', \t', row[1], ', \t', round(row[2], 2), ', \t', round(row[3], 2), ', \t', round(row[4], 2))
+
 main()
 ```
 
@@ -721,6 +725,7 @@ def main():
     print( 'timestamp       \t', 'identifier        \t', 'temperature   \t', 'humidity  \t', 'pressure')
     for data in result:
         print( data['timestamp'], ', \t', data['identifier'], ', \t', round(data['temperature'], 2), ', \t', round(data['humidity'], 2), ', \t', round(data['pressure'], 2))
+
 main()
 ```
 

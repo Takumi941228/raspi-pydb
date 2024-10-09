@@ -118,6 +118,7 @@ def main():
 
     #グラフを表示する
     plt.show()
+
 main()
 ```
 
@@ -207,8 +208,8 @@ def main():
 
     #グラフを表示する
     plt.show()
-main()
 
+main()
 ```
 
 `db_ambient_count02.py`
@@ -293,7 +294,6 @@ def select_ave_one_hour(node_id, start_timestamp, limit_count):
         array.append(dict)
     #データを格納した辞書の配列を返す
     return(array)
-
 
 #最新のデータを取得する
 #node_id: 対象となるノードのidentifier
@@ -530,6 +530,7 @@ def main():
 
         #次の更新周期まで待つ
         plt.pause(update_cycle)
+
 main()
 ```
 
@@ -680,6 +681,7 @@ def main():
     plt.plot(x, y['pressure'])#プロットデータを設定する
 
     plt.show() #グラフ全体をを表示する
+
 main()
 ```
 
@@ -903,6 +905,7 @@ def main():
 
         #次の更新周期まで待つ
         plt.pause(update_cycle)
+
 main()
 ```
 

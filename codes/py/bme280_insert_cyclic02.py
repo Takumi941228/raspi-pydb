@@ -35,9 +35,8 @@ def main():
         #データベースの操作を行う------
         db_result = db_ambient.insert_row(new_row)
         print('追加するデータ: ', new_row)
-        #クエリを実行した。変更した row の数が戻り値となる
+        #クエリを実行した。変更したrowの数が戻り値となる
         print('クエリを実行しました。('+ str(db_result) +' row affected.)')
 
         time.sleep(CYCLE_SEC)
-
 main()

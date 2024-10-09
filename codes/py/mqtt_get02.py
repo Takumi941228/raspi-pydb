@@ -10,7 +10,7 @@ import json
 from datetime import datetime as dt 
 
 #MQTTブローカへの接続に必要な情報
-MQTT_HOST = '10.45.48.110'
+MQTT_HOST = 'MQTTブローカのIPアドレス'
 MQTT_PORT = 1883
 MQTT_TOPIC = 'esp32/bme'
 #mqttClientを指すための変数を用意
@@ -38,7 +38,8 @@ def on_message(client, userdata, msg):
   temp_raw = json_msg["temp"]
 
   #各データを扱いやすい形に変換
-  date = str(dt.today().strftime('%Y-%m-%d')) + " " + str(date_raw)
+  date = str(dt.today().strftime('%Y-%m-%d')) + " " + str(date_raw) #日付と時間を文字列連結
+  #小数点第二位で四捨五入
   temp = round(temp_raw, 2)
   humi = round(humi_raw, 2)
   press = round(press_raw, 2)

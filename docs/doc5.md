@@ -45,7 +45,7 @@ pi@raspberrypi:~ $ i2cdetect -y 1
 
 #### 5.1.3 ライブラリのインストール
 
-I2C 通信を簡単に取扱うためのライブラリ`smbus2`をインストールします。
+I2C通信を簡単に取扱うためのライブラリ`smbus2`をインストールします。
 
 ```bash
 pi@raspberrypi:~ $ sudo apt -y install python3-smbus2
@@ -421,7 +421,7 @@ def setup():
 
 #### 5.3.2 継続的な測定
 
-継続的に測定を行うプログラムを考えます。10 秒毎に測定を行いデータを表示するプログラムを作成します。
+継続的に測定を行うプログラムを考えます。10秒毎に測定を行いデータを表示するプログラムを作成します。
 
 `bme280_cyclic01.py`
 
@@ -452,6 +452,7 @@ def main():
         print(f'{datetime_now},    {temp:.2f},    {hum:.2f},    {press:.2f}')
 
         time.sleep(10)
+
 main()
 ```
 
@@ -487,13 +488,15 @@ MariaDBにログインしたら、データベースを作成します。
 
 ```sql
 MariaDB [(none)]> CREATE DATABASE iot_storage CHARACTER SET utf8mb4;
-Query OK, 1 row affected (0.001 sec)
 ```
 
 データベースが作成されたか、確認をおこないます。
 
 ```sql
-MariaDB [(none)]> SHOW DATABASEs;
+MariaDB [(none)]> SHOW DATABASES;
+```
+
+```sql
 +--------------------+
 | Database           |
 +--------------------+
@@ -511,7 +514,6 @@ MariaDB [(none)]> SHOW DATABASEs;
 
 ```sql
 MariaDB [(none)]> GRANT select, update, insert, delete ON iot_storage.* TO 'iot_user'@'localhost'; 
-Query OK, 0 rows affected (0.572 sec)
 ```
 
 ```sql
@@ -549,6 +551,9 @@ MariaDBに設定されているタイムゾーンを確認するには、下記�
 
 ```sql
 MariaDB [iot_storage]> SELECT @@system_time_zone;
+```
+
+```sql
 +--------------------+
 | @@system_time_zone |
 +--------------------+
@@ -567,13 +572,15 @@ MariaDB [iot_storage]> CREATE TABLE Ambient(
     -> temperature DOUBLE,
     -> humidity DOUBLE,
     -> pressure DOUBLE );
-Query OK, 0 rows affected (0.498 sec)
 ```
 
 作成したテーブルを確認します。
 
 ```sql
 MariaDB [iot_storage]> SHOW TABLES;
+```
+
+```sql
 +-----------------------+
 | Tables_in_iot_storage |
 +-----------------------+
@@ -586,6 +593,9 @@ MariaDB [iot_storage]> SHOW TABLES;
 
 ```sql
 MariaDB [iot_storage]>  SHOW COLUMNS FROM Ambient;
+```
+
+```sql
 +-------------+-----------+------+-----+---------+----------------+
 | Field       | Type      | Null | Key | Default | Extra          |
 +-------------+-----------+------+-----+---------+----------------+
@@ -603,11 +613,11 @@ MariaDB [iot_storage]>  SHOW COLUMNS FROM Ambient;
 
 ```sql
 MariaDB [iot_storage]> exit
-Bye
 ```
 
 ```bash
 pi@raspberrypi:~/python_sql $ sudo mariadb -u iot_user -p
+Enter password: 
 ```
 
 ```sql
@@ -620,6 +630,9 @@ MariaDB [(none)]> use iot_storage;
 
 ```sql
 MariaDB [iot_storage]> SELECT * FROM Ambient;
+```
+
+```bash
 Empty set (0.001 sec)
 ```
 
@@ -636,12 +649,14 @@ Empty set (0.001 sec)
 このデータを利用して、次のようにクエリを作成してみましょう。
 
 ```sql
-INSERT INTO Ambient(timestamp, identifier, temperature, humidity, pressure) VALUES('2024-09-06 20:03:00', 'tochigi_iot_999', '27.26', '49.66', '998.24');
-Query OK, 1 row affected (0.107 sec)
+MariaDB [iot_storage]> INSERT INTO Ambient(timestamp, identifier, temperature, humidity, pressure) VALUES('2024-09-06 20:03:00', 'tochigi_iot_999', '27.26', '49.66', '998.24');
 ```
 
 ```sql
 MariaDB [iot_storage]> SELECT * FROM Ambient;
+```
+
+```sql
 +--------+---------------------+-----------------+-------------+----------+----------+
 | row_id | timestamp           | identifier      | temperature | humidity | pressure |
 +--------+---------------------+-----------------+-------------+----------+----------+
@@ -661,13 +676,13 @@ MariaDB [iot_storage]> SELECT * FROM Ambient;
 #coding: utf-8
 
 #モジュールをインポート
-import bme280mod #BME280センサ関連を取扱う
-import time      #時間を取扱う
-import datetime  #日付と時刻を取扱う
+import bme280mod       #BME280センサ関連を取扱う
+import time            #時間を取扱う
+import datetime        #日付と時刻を取扱う
 import pymysql.cursors #PythonからDBを取扱う
 
 #このノードを識別するID
-NODE_IDENTIFIER = 'tochigi_iot_999';
+NODE_IDENTIFIER = 'tochigi_iot_999'
 
 def main():
     #モジュール内に定義されているメソッドを呼び出す
@@ -686,15 +701,16 @@ def main():
     new_timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     print(f'{new_timestamp}, {new_temp:.2f}, {new_hum:.2f}, {new_press:.2f}') #データベースの操作を行う
-    #DB サーバに接続する
+    
+    #DBサーバに接続する
     sql_connection = pymysql.connect(
-        user='iot_user', #データベースにログインするユーザ名
-        passwd='password', #データベースユーザのパスワード
-        host='localhost', #接続先DBのホストorIPアドレス
+        user='iot_user',    #データベースにログインするユーザ名
+        passwd='password',  #データベースユーザのパスワード
+        host='localhost',   #接続先DBのホストorIPアドレス
         db='iot_storage'
     )
 
-    #cursor オブジェクトのインスタンスを生成
+    #cursorオブジェクトのインスタンスを生成
     sql_cursor = sql_connection.cursor()
     print('●クエリの実行(データの挿入)')
     #クエリを指定する。実データは後から指定する。
@@ -706,7 +722,7 @@ def main():
 
     print('実行するクエリ: ' + query1)
 
-    #クエリを実行した。変更した row の数が戻り値となる
+    #クエリを実行した。変更したrowの数が戻り値となる
     print('クエリを実行しました。('+ str(result1) +' row affected.)')
 
     #変更を実際に反映させる
@@ -715,7 +731,7 @@ def main():
 main()
 ```
 
-```sql
+```bash
 測定日時[YYYY-MM-DD HH:MM:SS], 温度[℃], 湿度[%], 気圧[hPa]
 2024-09-09 18:07:19, 25.98, 43.80, 1001.80
 ●クエリの実行(データの挿入)
@@ -727,6 +743,9 @@ MariaDBにログインして、追加されたデータを確認してくださ�
 
 ```sql
 MariaDB [iot_storage]> SELECT * FROM Ambient;
+```
+
+```sql
 +--------+---------------------+-----------------+-------------+----------+----------+
 | row_id | timestamp           | identifier      | temperature | humidity | pressure |
 +--------+---------------------+-----------------+-------------+----------+----------+
@@ -752,7 +771,7 @@ import datetime        #日付と時刻を取扱う
 import pymysql.cursors #PythonからDBを取扱う
 
 #このノードを識別するID
-NODE_IDENTIFIER = 'tochigi_iot_999';
+NODE_IDENTIFIER = 'tochigi_iot_999'
 
 def main():
     #モジュール内に定義されているメソッドを呼び出す
@@ -764,28 +783,27 @@ def main():
     data = bme280mod.get_data() #データを取得
 
     #ディクショナリからデータを取得
-    new_temp = round(data['temperature'], 2) #小数点以下 2 桁で丸め
+    new_temp = round(data['temperature'], 2) #小数点以下2桁で丸め
     new_hum = round(data['humidity'], 2)
 
     new_press = round(data['pressure'], 2)
     new_timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S ")
 
-    #DB に渡すための新しいディクショナリ形式にまとめる。
+    #DBに渡すための新しいディクショナリ形式にまとめる。
     new_row ={"timestamp" : new_timestamp, "identifier" : NODE_IDENTIFIER, "temperature": new_temp, "humidity": new_hum,"pressure": new_press};
 
     print(f'{new_timestamp}, {new_temp:.2f}, {new_hum:.2f}, {new_press:.2f}')
 
     #データベースの操作を行う------
-
     #DB サーバに接続する
     sql_connection = pymysql.connect(
-        user='iot_user', #データベースにログインするユーザ名
+        user='iot_user',  #データベースにログインするユーザ名
         passwd='password',#データベースユーザのパスワード
         host='localhost', #接続先DBのホストorIPアドレス
         db='iot_storage'
     )
 
-    #cursor オブジェクトのインスタンスを生成
+    #cursorオブジェクトのインスタンスを生成
     sql_cursor = sql_connection.cursor()
     print('●クエリの実行(データの挿入)')
 
@@ -798,7 +816,7 @@ def main():
     
     print('実行するクエリ: ' + query1)
 
-    #クエリを実行した。変更した row の数が戻り値となる
+    #クエリを実行した。変更したrowの数が戻り値となる
     print('クエリを実行しました。('+ str(result1) +' row affected.)')
 
     #変更を実際に反映させる
@@ -819,6 +837,9 @@ MariaDBにログインして、追加されたデータを確認してみまし�
 
 ```sql
 MariaDB [iot_storage]> SELECT * FROM Ambient;
+```
+
+```sql
 +--------+---------------------+-----------------+-------------+----------+----------+
 | row_id | timestamp           | identifier      | temperature | humidity | pressure |
 +--------+---------------------+-----------------+-------------+----------+----------+
@@ -833,20 +854,20 @@ MariaDB [iot_storage]> SELECT * FROM Ambient;
 
 継続的に測定し、データを追加するプログラムを考えてみます。
 
-`bme280_inset_cyclic01.py`
+`bme280_insert_cyclic01.py`
 
 ```python
 #coding: utf-8
 
 #モジュールをインポート
-import bme280mod #BME280センサ関連を取扱う
-import time      #時間を取扱う
-import datetime  #日付と時刻を取扱う
+import bme280mod       #BME280センサ関連を取扱う
+import time            #時間を取扱う
+import datetime        #日付と時刻を取扱う
 import pymysql.cursors #PythonからDBを取扱う
 
 
 #このノードを識別するID
-NODE_IDENTIFIER = 'tochigi_iot_999';
+NODE_IDENTIFIER = 'tochigi_iot_999'
 
 #DBへの接続情報
 DB_USER = 'iot_user'
@@ -860,7 +881,7 @@ def main():
 
     #DBサーバに接続する
     sql_connection = pymysql.connect(
-        user= DB_USER,  #データベースにログインするユーザ名
+        user= DB_USER,    #データベースにログインするユーザ名
         passwd = DB_PASS, #データベースユーザのパスワード
         host = DB_HOST,   #接続先DBのホストorIPアドレス
         db = DB_NAME
@@ -879,15 +900,21 @@ def main():
         new_timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         #DBに渡すための新しいディクショナリ形式にまとめる。
-        new_row = {"timestamp" : new_timestamp, "identifier" : NODE_IDENTIFIER, "temperature": new_temp, "humidity" :        new_hum, "pressure" : new_press};
+        new_row = {
+            "timestamp" : new_timestamp,
+            "identifier" : NODE_IDENTIFIER,
+            "temperature" : new_temp,
+            "humidity" : new_hum,
+            "pressure" : new_press
+        };
 
         print(f'●NEW_DATA● TIMESTAMP: {new_timestamp}, TEMP: {new_temp:.2f}, HUMIDITY: {new_hum:.2f}, PRESSURE: {new_press:.2f}')
 
         #データベースの操作を行う------
-
         #cursorオブジェクトのインスタンスを生成
         sql_cursor = sql_connection.cursor()
         print('-- クエリの実行(データの挿入)')
+
         #クエリを指定する。実データは後から指定する。
         query1 = "INSERT INTO Ambient(timestamp, identifier, temperature, humidity, pressure) " \
                 " VALUES(%(timestamp)s, %(identifier)s, %(temperature)s, %(humidity)s, %(pressure)s)";
@@ -902,6 +929,7 @@ def main():
         sql_connection.commit()
 
         time.sleep(10)
+
 main()
 ```
 
@@ -960,7 +988,7 @@ MariaDB [iot_storage]> SELECT * FROM Ambient;
 #モジュールをインポート
 import pymysql.cursors #PythonからDBを取扱う
 
-#DB への接続情報
+#DBへの接続情報
 DB_USER = 'iot_user'
 DB_PASS = 'password'
 DB_HOST = 'localhost'
@@ -972,19 +1000,20 @@ sql_connection = None
 def connect():
     global sql_connection
 
-    #DB サーバに接続する
+    #DBサーバに接続する
     sql_connection = pymysql.connect(
-        user = DB_USER, #データベースにログインするユーザ名
+        user = DB_USER,  #データベースにログインするユーザ名
         passwd = DB_PASS,#データベースユーザのパスワード
-        host = DB_HOST, #接続先DBのホストorIPアドレス
+        host = DB_HOST,  #接続先DBのホストorIPアドレス
         db = DB_NAME
     )
 
-def insert_row(row): #クエリの作成
+def insert_row(row):
+    #クエリの作成
     query = "INSERT INTO Ambient(timestamp, identifier, temperature, humidity, pressure) " \
         " VALUES(%(timestamp)s, %(identifier)s, %(temperature)s, %(humidity)s, %(pressure)s)";
 
-    #cursor オブジェクトのインスタンスを生成
+    #cursorオブジェクトのインスタンスを生成
     sql_cursor = sql_connection.cursor()
 
     #クエリを実行する
@@ -1036,11 +1065,11 @@ def main():
         #データベースの操作を行う------
         db_result = db_ambient.insert_row(new_row)
         print('追加するデータ: ', new_row)
-        #クエリを実行した。変更した row の数が戻り値となる
+        #クエリを実行した。変更したrowの数が戻り値となる
         print('クエリを実行しました。('+ str(db_result) +' row affected.)')
 
         time.sleep(CYCLE_SEC)
-
+        
 main()
 ```
 
@@ -1088,4 +1117,4 @@ MariaDB [iot_storage]> SELECT * FROM Ambient;
 
 ターミナルをもう一つ起動して、先ほど作成したデータの測定＆蓄積プログラムを実行しましょう。このターミナルは、閉じずにずっとプログラムを実行しておきましょう。「7. データの集計・分析」でデータの分析を行うので、データ数が多いほど役に立ちます。
 
-![VSCode](../images/VSCOde27.PNG)
+![VSCode](../images/VSCode27.PNG)

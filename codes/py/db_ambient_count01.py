@@ -5,7 +5,7 @@ import pymysql.cursors #PythonからDBを取扱う
 
 #DBへの接続情報
 DB_USER = 'iot_user'
-DB_PASS = 'password'
+DB_PASS = 'Passw0rd'
 DB_HOST = 'localhost'
 DB_NAME = 'iot_storage'
 

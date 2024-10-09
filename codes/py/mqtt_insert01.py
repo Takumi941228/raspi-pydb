@@ -13,10 +13,10 @@ from datetime import datetime as dt
 import db_ambient
 
 #このノードを識別するID
-NODE_IDENTIFIER = 'tochigi_mqtt_999';
+NODE_IDENTIFIER = 'tochigi_mqtt_999'
 
 #MQTTブローカへの接続に必要な情報
-MQTT_HOST = '10.45.48.110'
+MQTT_HOST = 'MQTTブローカのIPアドレス'
 MQTT_PORT = 1883
 MQTT_TOPIC = 'esp32/bme'
 #mqttClient を指すための変数を用意
@@ -51,12 +51,12 @@ def on_message(client, userdata, msg):
 
   #DBに渡すための新しいディクショナリ形式にまとめる。
   new_row ={
-            "timestamp" : date,
-            "identifier" : NODE_IDENTIFIER,
-            "temperature" : temp,
-            "humidity" : humi,
-            "pressure" : press
-            };
+    "timestamp" : date,
+    "identifier" : NODE_IDENTIFIER,
+    "temperature" : temp,
+    "humidity" : humi,
+    "pressure" : press
+  };
 
   #データベースの操作を行う------
   db_result = db_ambient.insert_row(new_row)

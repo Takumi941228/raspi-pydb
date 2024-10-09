@@ -2,14 +2,11 @@
 
 import pymysql.cursors #PythonからDBを利用するためのモジュールを利用
 
-#select01.py
-#テーブルのデータを表示する
-
 def main():
-#DBサーバに接続する
+    #DBサーバに接続する
     sql_connection = pymysql.connect(
-        user='iot_user', #データベースにログインするユーザ名
-        passwd='Passw0rd',#データベースユーザのパスワード
+        user='iot_user',  #データベースにログインするユーザ名
+        passwd='password',#データベースユーザのパスワード
         host='localhost', #接続先DBのホストorIPアドレス
         db='practice'
     )
@@ -21,7 +18,7 @@ def main():
     print(query, ' のクエリの結果\n')
     print( 'account_id \t', 'first_name \t', 'last_name \t', 'balance \t ','atm_count' )
 
-    #クエリを実行した結果得られたデータを 1 行ずつ表示する
+    #クエリを実行した結果得られたデータを1行ずつ表示する
     for row in sql_cursor.fetchall():
-        print( row[0], ',\t', row[1], ',\t', row[2], ',\t', row[3], ',\t', row[4])
+        print( row[0], ', \t', row[1], ', \t', row[2], ', \t', row[3], ', \t', row[4])
 main()

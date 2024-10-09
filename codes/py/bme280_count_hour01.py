@@ -1,4 +1,5 @@
 #coding: utf-8
+
 import pymysql.cursors #PythonからDBを利用するためのモジュールを利用
 
 #DBへの接続情報
@@ -58,4 +59,5 @@ def main():
 
     for row in sql_cursor.fetchall():
         print( row[0], ', \t', row[1], ', \t', round(row[2], 2), ', \t', round(row[3], 2), ', \t', round(row[4], 2))
+
 main()

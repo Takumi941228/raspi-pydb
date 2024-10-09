@@ -1,23 +1,21 @@
 #coding: utf-8
-import pymysql.cursors #PythonからDBを利用するためのモジュールを利用
 
-#insert03.py:S
-#テーブルにデータを挿入する
-#(データをディクショナリ形式で指定）
+import pymysql.cursors #PythonからDBを利用するためのモジュールを利用
 
 def main():
     #DB サーバに接続する
     sql_connection = pymysql.connect(
-        user='iot_user', #データベースにログインするユーザ名
-        passwd='Passw0rd',#データベースユーザのパスワード
+        user='iot_user',  #データベースにログインするユーザ名
+        passwd='password',#データベースユーザのパスワード
         host='localhost', #接続先DBのホストorIPアドレス
         db='practice'
     )
 
-    #cursor オブジェクトのインスタンスを生成
+    #cursorオブジェクトのインスタンスを生成
     sql_cursor = sql_connection.cursor()
 
-    #テーブルにデータを挿入する print('●クエリの実行(データの挿入)')
+    #テーブルにデータを挿入する
+    print('●クエリの実行(データの挿入)')
 
     #クエリを指定する。実データは後から指定する。
     #実データはディクショナリ形式とするため、ブレースホルダにキー名を指定する
@@ -64,5 +62,6 @@ def main():
 
     print( 'account_id \t', 'first_name \t', 'last_name \t', 'balance \t ','atm_count') #クエリを実行した結果得られたデータを1行ずつ表示する
     for row in sql_cursor.fetchall():
-        print( row[0], ',\t', row[1], ',\t', row[2], ',\t', row[3], ',\t', row[4])
+        print( row[0], ', \t', row[1], ', \t', row[2], ', \t', row[3], ', \t', row[4])
+
 main()
