@@ -728,6 +728,7 @@ def main():
     #cursorオブジェクトのインスタンスを生成
     sql_cursor = sql_connection.cursor()
     print('●クエリの実行(データの挿入)')
+
     #クエリを指定する。実データは後から指定する。
     query1 = "INSERT INTO Ambient(timestamp, identifier, temperature, humidity, pressure) " \
              " VALUES(%s, %s, %s, %s, %s)";
@@ -800,8 +801,8 @@ def main():
     #ディクショナリからデータを取得
     new_temp = round(data['temperature'], 2) #小数点以下2桁で丸め
     new_hum = round(data['humidity'], 2)
-
     new_press = round(data['pressure'], 2)
+
     new_timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S ")
 
     #DBに渡すための新しいディクショナリ形式にまとめる。
@@ -912,6 +913,7 @@ def main():
         new_temp = round(data['temperature'], 2) #小数点以下2桁で丸め
         new_hum = round(data['humidity'], 2)
         new_press = round(data['pressure'], 2)
+
         new_timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         #DBに渡すための新しいディクショナリ形式にまとめる。
@@ -961,6 +963,8 @@ Database connection established!
 実行するクエリ: INSERT INTO Ambient(timestamp, identifier, temperature, humidity, pressure)  VALUES(%(timestamp)s, %(identifier)s, %(temperature)s, %(humidity)s, %(pressure)s)
 クエリを実行しました。(1 row affected.)
 ```
+
+**Ctr+Z**で実行の停止になります。
 
 MariaDBにログインして、追加されたデータを確認しましょう。
 
@@ -1132,4 +1136,4 @@ MariaDB [iot_storage]> SELECT * FROM Ambient;
 
 ターミナルをもう一つ起動して、先ほど作成したデータの測定＆蓄積プログラムを実行しましょう。このターミナルは、閉じずにずっとプログラムを実行しておきましょう。「7. データの集計・分析」でデータの分析を行うので、データ数が多いほど役に立ちます。
 
-![VSCode](../images/VSCode27.PNG)
+![VSCode](../images/vsode27.PNG)
