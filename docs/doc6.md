@@ -934,4 +934,4 @@ MariaDB [iot_storage]> SELECT * FROM Ambient;
 
 ターミナルをもう一つ起動して、先ほど作成したデータの測定＆蓄積プログラムを実行しましょう。このターミナルは、閉じずにずっとプログラムを実行しておきましょう。「7. データの集計・分析」でデータの分析を行うので、データ数が多いほど役に立ちます。
 
-![VSCode](../images/VSCOde28.PNG)
+![VSCode](../images/vscode28.PNG)
