@@ -19,7 +19,7 @@
 #define MQTT_SERVER "MQTTブローカのIPアドレス"  //例:xx.xx.xx.xx
 #define MQTT_PORT 1883
 #define MQTT_BUFFER_SIZE 256
-#define TOPIC "esp32/bme"
+#define TOPIC "esp32/bme/00"
 #define DEVICE_ID "esp001"  //デバイスIDは機器ごとにユニーク
 
 /* PIN config */
