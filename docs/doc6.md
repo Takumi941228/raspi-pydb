@@ -41,10 +41,11 @@ MQTTブローカに接続して、データを取得します。コマンドを�
 | -h | サーバ名 | -h localhost |
 | -p | ポート番号 | -p 1883 |
 | -t | トピック名 | -t device/tochigi |
+| -d | バックグラウンド実行 | - |
 
 
 ```bash
-pi@raspberrypi:~/python_sql $ mosquitto_sub -h xx.xx.xx.xx -p 1883 -t test
+pi@raspberrypi:~/python_sql $ mosquitto_sub -d -h xx.xx.xx.xx -p 1883 -t test
 ```
 
 ```bash
@@ -64,7 +65,7 @@ Subscribed (mid: 1): 0
 MQTTブローカに接続して、データを送信します。コマンドを入力し、MQTTパブリッシャを起動します。コマンドの書式は、次のとおりです。xxの部分は、MQTTブローカのIPアドレスを指定します。
 
 ```bash
-pi@raspberrypi:~/python_sql $ mosquitto_pub -h xx.xx.xx.xx -p 1883 -t test -m "Hello MQTT!"
+pi@raspberrypi:~/python_sql $ mosquitto_pub -d -h xx.xx.xx.xx -p 1883 -t test -m "Hello MQTT!"
 ```
 
 ```bash
@@ -247,7 +248,7 @@ Silicon Labs CP210x driverを以下のアドレスよりダウンロードして
 #define MQTT_SERVER "MQTTブローカのIPアドレス"  //例:xx.xx.xx.xx
 #define MQTT_PORT 1883
 #define MQTT_BUFFER_SIZE 256
-#define TOPIC "esp32/bme"
+#define TOPIC "esp32/bme/00"
 #define DEVICE_ID "esp001"  //デバイスIDは機器ごとにユニーク
 
 /* PIN config */
@@ -463,7 +464,7 @@ void loop() {
 実行結果は次のようになります。
 
 ```bash
-pi@raspberrypi:~/python_sql $ mosquitto_sub -h xx.xx.xx.xx -p 1883 -t esp32/bme
+pi@raspberrypi:~/python_sql $ mosquitto_sub -h xx.xx.xx.xx -p 1883 -t esp32/bme/xx
 ```
 
 ```bash
@@ -492,9 +493,9 @@ pi@raspberrypi:~/python_sql $ sudo apt -y install python3-paho-mqtt
 #PahoのMQTTライブラリを使用する
 import paho.mqtt.client as mqtt
 
-MQTT_HOST = 'MQTTブローカのIPアドレス'
+MQTT_HOST = 'MQTTブローカのIPアドレス' #例:xxx.xxx.xxx.xxx
 MQTT_PORT = 1883
-MQTT_TOPIC = 'esp32/bme'
+MQTT_TOPIC = 'esp32/bme/00'
 
 #サーバからCONNACK応答を受信したときに実行されるコールバック
 def on_connect(client, userdata, flags, rc):
@@ -547,7 +548,8 @@ from datetime import datetime as dt
 #MQTTブローカへの接続に必要な情報
 MQTT_HOST = 'MQTTブローカのIPアドレス'
 MQTT_PORT = 1883
-MQTT_TOPIC = 'esp32/bme'
+MQTT_TOPIC = 'esp32/bme/00'
+
 #mqttClientを指すための変数を用意
 mqttClient = None
 
@@ -644,7 +646,8 @@ NODE_IDENTIFIER = 'tochigi_mqtt_999'
 #MQTTブローカへの接続に必要な情報
 MQTT_HOST = 'MQTTブローカのIPアドレス'
 MQTT_PORT = 1883
-MQTT_TOPIC = 'esp32/bme'
+MQTT_TOPIC = 'esp32/bme/00'
+
 #mqttClient を指すための変数を用意
 mqttClient = None
 
@@ -830,7 +833,8 @@ NODE_IDENTIFIER = 'tochigi_mqtt_999'
 #MQTTブローカへの接続に必要な情報
 MQTT_HOST = 'MQTTブローカのIPアドレス'
 MQTT_PORT = 1883
-MQTT_TOPIC = 'esp32/bme'
+MQTT_TOPIC = 'esp32/bme/00'
+
 #mqttClient を指すための変数を用意
 mqttClient = None
 #コールバック関数
