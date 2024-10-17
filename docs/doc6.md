@@ -2,7 +2,7 @@
 
 ## 6. MQTT経由のデータの取得と蓄積
 
-屋内に設置したESP32デバイスからのデータを受信することを考えます。データの取得はMQTTプロトコルを使用します。MQTT通信は、校内に設置したMQTTブローカを利用することを想定しています。
+屋外に設置したESP32デバイスからのデータを受信することを想定します。データの取得はMQTTプロトコルを使用します。MQTT通信は、校内に設置したMQTTブローカを利用することを想定しています。
 
 ### 6.1 MQTTとは
 
@@ -42,7 +42,6 @@ MQTTブローカに接続して、データを取得します。コマンドを�
 | -p | ポート番号 | -p 1883 |
 | -t | トピック名 | -t device/tochigi |
 | -d | バックグラウンド実行 | - |
-
 
 ```bash
 pi@raspberrypi:~/python_sql $ mosquitto_sub -d -h xx.xx.xx.xx -p 1883 -t test
@@ -209,6 +208,8 @@ Silicon Labs CP210x driverを以下のアドレスよりダウンロードして
 * PubSubClient
   * ライブラリ検索で追加
     * https://pubsubclient.knolleary.net/
+
+`JSON形式変換ライブラリ`
 
 * ArduinoJson
   * ライブラリ検索で追加
@@ -493,7 +494,7 @@ pi@raspberrypi:~/python_sql $ sudo apt -y install python3-paho-mqtt
 #PahoのMQTTライブラリを使用する
 import paho.mqtt.client as mqtt
 
-MQTT_HOST = 'MQTTブローカのIPアドレス' #例:xxx.xxx.xxx.xxx
+MQTT_HOST = 'MQTTブローカのIPアドレス' #例:xx.xx.xx.xx
 MQTT_PORT = 1883
 MQTT_TOPIC = 'esp32/bme/00'
 
@@ -523,8 +524,8 @@ mqttClient.loop_forever()
 
 ```bash
 Connected with result code 0
-esp32/bme b'{"timestamp":"19:03:31","humid":49.19726563,"press":1002.027893,"temp":27.29999924}'
-esp32/bme b'{"timestamp":"19:03:36","humid":49.13769531,"press":1002.019592,"temp":27.29000092}'
+esp32/bme/00 b'{"timestamp":"19:03:31","humid":49.19726563,"press":1002.027893,"temp":27.29999924}'
+esp32/bme/00 b'{"timestamp":"19:03:36","humid":49.13769531,"press":1002.019592,"temp":27.29000092}'
 ```
 
 #### 6.4.2 日付を付けたデータの取得
