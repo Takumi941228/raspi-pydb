@@ -12,8 +12,45 @@
 pi@raspberrypi:~/python_sql $ sudo apt -y install mosquitto
 ```
 
+別端末からパスワードなしで、MQTTブローカーにアクセスするには、ログイン認証をなしにする必要があります。
+
 ```bash
-pi@raspberrypi:~/python_sql $ sudo systemctl status mosquitto.service
+pi@raspberrypi:~ $ sudo apt -y install vim
+```
+
+```bash
+pi@raspberrypi:~ $ sudo vim /etc/mosquitto/mosquitto.conf
+```
+
+* mosquitto.confに以下を追加
+    * listener 1883
+    * allow_anonymous true
+
+```bash
+# Place your local configuration in /etc/mosquitto/conf.d/
+#
+# A full description of the configuration file is at
+# /usr/share/doc/mosquitto/examples/mosquitto.conf.example
+
+pid_file /run/mosquitto/mosquitto.pid
+
+persistence true
+persistence_location /var/lib/mosquitto/
+
+log_dest file /var/log/mosquitto/mosquitto.log
+
+include_dir /etc/mosquitto/conf.d
+
+listener 1883
+allow_anonymous true
+```
+
+```bash
+pi@raspberrypi:~ $ sudo systemctl restart mosquitto.service 
+```
+
+```bash
+pi@raspberrypi:~ $ sudo systemctl status mosquitto.service 
 ```
 
 ```bash
