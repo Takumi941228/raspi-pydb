@@ -250,7 +250,7 @@ Silicon Labs CP210x driverを以下のアドレスよりダウンロードして
 #define MQTT_PORT 1883
 #define MQTT_BUFFER_SIZE 256
 #define TOPIC "esp32/bme/00"
-#define DEVICE_ID "esp001"  //デバイスIDは機器ごとにユニーク
+#define DEVICE_ID "esp000"  　//デバイスIDは機器ごとにユニーク
 
 /* PIN config */
 #define SW1 25
