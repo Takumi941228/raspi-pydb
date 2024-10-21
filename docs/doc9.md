@@ -604,4 +604,3 @@ MariaDB [iot_storage]> SELECT * FROM Ambient WHERE identifier = 'tochigi_iot_899
 +--------+---------------------+-----------------+-------------+----------+----------+
 15 rows in set (0.071 sec)
 ```
-

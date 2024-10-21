@@ -494,11 +494,6 @@ def main():
     #グラフの設定
     fig, ax = plt.subplots()
 
-    #グラフのタイトルを指定
-    plt.title(f'Temperature Trend(Node: {node_id}, Every {update_cycle} sec. cycle)')
-    plt.xlabel('TimeStamp')             #Y軸のタイトルを指定
-    plt.ylabel('Temperature [deg. C.]') #X軸のタイトルを指定
-
     #ラベルの設定
     labels = ax.get_xticklabels()
     plt.setp(labels, rotation=90) #x軸のラベルを90度回転させる
@@ -526,6 +521,11 @@ def main():
             x = np.append(x, data['timestamp'])
             y = np.append(y, data['temperature'])
  
+        #グラフのタイトルを指定
+        plt.title(f'Temperature Trend(Node: {node_id}, Every {update_cycle} sec. cycle)')
+        plt.xlabel('TimeStamp')             #Y軸のタイトルを指定
+        plt.ylabel('Temperature [deg. C.]') #X軸のタイトルを指定
+
         plt.plot(x,y) #グラフを描画する
 
         #次の更新周期まで待つ

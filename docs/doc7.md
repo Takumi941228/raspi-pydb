@@ -4,7 +4,7 @@
 
 測定したデータは、そのままでは役に立ちません。集計・分析して可視化することで思いもしなかった用途に活用することができます。
 
-### 7.1.データの集計
+### 7.1 データの集計
 
 テーブルの構造をもう一度確認しておきましょう。
 
@@ -95,7 +95,7 @@ MariaDB [iot_storage]> SELECT * FROM Ambient WHERE identifier = "tochigi_mqtt_99
 36 rows in set (0.001 sec)
 ```
 
-#### 7.1.2 選択すう行数の限定
+#### 7.1.2 選択する行数の限定
 
 データの数が増えてくると、一回のクエリで取り出すデータの数が膨大になります。データの数を限定して取り出します。次のクエリでは、取り出すデータの数を10行に限定します。`LIMIT`句により行数を指定します。
 
@@ -123,7 +123,7 @@ MariaDB [iot_storage]> SELECT * FROM Ambient WHERE identifier = "tochigi_mqtt_99
 
 #### 7.1.3 並び順の指定・ソート
 
-取り出したデータの並び順を変更します。データの並び順は昇順（値の小さいものから大きいものの順）・降順（値の小さいものから大きいものの順）があり、どのカラムを基準にするかを指定します。`ORDER BY`句を用いて、どのカラムを基準にするかを指定します。その後に`ASC`または`DESC`を指定します。`ASC`は昇順、`DESC`は降順となります。昇順を指定した場合は、一番値の小さいものから、降順を指定した場合は一番値の大きいものからデータを取り出します。
+取り出したデータの並び順を変更します。データの並び順は昇順（値の小さいものから大きいものの順）・降順（値の大きいものから小さいものの順）があり、どのカラムを基準にするかを指定します。`ORDER BY`句を用いて、どのカラムを基準にするかを指定します。その後に`ASC`または`DESC`を指定します。`ASC`は昇順、`DESC`は降順となります。昇順を指定した場合は、一番値の小さいものから、降順を指定した場合は一番値の大きいものからデータを取り出します。
 
 次のクエリは、日付・時刻を基準に古いデータから順に表示します。
 
@@ -255,7 +255,7 @@ MariaDB [iot_storage]> SELECT * FROM Ambient WHERE timestamp BETWEEN '2024-09-11
 数値の大小による指定でデータを取り出すことを考えます。次のクエリは、`temperature`の値が`23.0`以上のデータを5行取り出します。
 
 ```sql
-MariaDB [iot_storage]> SELECT * FROM Ambient WHERE timestamp >= 23.0 LIMIT 5;
+MariaDB [iot_storage]> SELECT * FROM Ambient WHERE temperature >= 23.0 LIMIT 5;
 ```
 
 ```sql
@@ -274,7 +274,7 @@ MariaDB [iot_storage]> SELECT * FROM Ambient WHERE timestamp >= 23.0 LIMIT 5;
 次のクエリは、`temperature`の値が23.0以上かつ`humidity`の値が50.0以上のデータを5行取り出します。
 
 ```sql
-MariaDB [iot_storage]> SELECT * FROM Ambient WHERE timestamp >= 23.0 AND humidity >= 50.0 LIMIT 5;
+MariaDB [iot_storage]> SELECT * FROM Ambient WHERE temperature >= 23.0 AND humidity >= 50.0 LIMIT 5;
 ```
 
 ```sql
@@ -294,7 +294,7 @@ MariaDB [iot_storage]> SELECT * FROM Ambient WHERE timestamp >= 23.0 AND humidit
 
 選択する行を指定し、選択された行のなかで特定のカラムの平均値・最大値・最小値を求めることを考えます。関数 MAX()取り出された行の指定されたカラムの最大値を求めます。関数 MIN(), 関数 AVG()は、それぞれ最小値と平均値を求めます。
 
-次のクエリは、`timestamp`のカラム(日付・時刻)を基準に、`20224年09月11日9:00:00`から`2024年09月11日16:00:00`までの間にノード`tochigi_iot_999`で取得した`temperature`データの最大値を求めます。
+次のクエリは、`timestamp`のカラム(日付・時刻)を基準に、`2024年09月11日9:00:00`から`2024年09月11日16:00:00`までの間にノード`tochigi_iot_999`で取得した`temperature`データの最大値を求めます。
 
 ```sql
 MariaDB [iot_storage]> SELECT MAX(temperature) FROM Ambient WHERE timestamp BETWEEN '2024-09-11 09:00:00' AND '2024-09-11 16:00:00' AND identifier = "tochigi_iot_999";
@@ -414,8 +414,7 @@ MariaDB [iot_storage]> SELECT timestamp, temperature, CONCAT(YEAR(timestamp), MO
 次のクエリは、`timestamp`のカラムを見やすくしたものです。
 
 ```sql
-MariaDB [iot_storage]> SELECT CONCAT(YEAR(timestamp), "年", MONTH(timestamp), "月", DAY(timestamp), "日", HOUR(timestamp), "時") AS "日時", AVG(temperature) AS "１時間毎の平均気温[℃]"
- FROM Ambient WHERE identifier = "tochigi_mqtt_999" AND timestamp >= "2024-09-19 00:00:00" GROUP BY CONCAT(YEAR(timestamp), MONTH(timestamp), DAY(timestamp), HOUR(timestamp)) ORDER BY timestamp ASC LIMIT 12;
+MariaDB [iot_storage]> SELECT CONCAT(YEAR(timestamp), "年", MONTH(timestamp), "月", DAY(timestamp), "日", HOUR(timestamp), "時") AS "日時", AVG(temperature) AS "１時間毎の平均気温[℃]" FROM Ambient WHERE identifier = "tochigi_mqtt_999" AND timestamp >= "2024-09-19 00:00:00" GROUP BY CONCAT(YEAR(timestamp), MONTH(timestamp), DAY(timestamp), HOUR(timestamp)) ORDER BY timestamp ASC LIMIT 12;
 ```
 
 各カラムの見出しは、`AS …`を用いて変更できます。
@@ -562,7 +561,7 @@ def main():
     print('●実行するクエリ: ', query)
     sql_cursor.execute(query, (datetime_start, limit_count))
 
-    print( 'timestamp       \t', 'identifier        \t', 'temperature   \t', 'humidity  \t ','pressure')
+    print( 'timestamp       \t', 'identifier        \t', 'temperature   \t', 'humidity  \t', 'pressure')
 
     #クエリを実行した結果得られたデータを１行ずつ表示する
     for row in sql_cursor.fetchall():
@@ -582,7 +581,7 @@ main()
 2024-09-19 10:00:00のデータからから何行のデータを表示しますか？
 数値を入力(例: 5) : 5
 ●実行するクエリ:  SELECT timestamp, identifier, temperature, humidity, pressure FROM Ambient WHERE timestamp > %s LIMIT %s;
-timestamp                identifier              temperature     humidity         pressure
+timestamp                identifier              temperature     humidity        pressure
 2024-09-19 14:59:51 ,    tochigi_mqtt_999 ,      27.39 ,         40.63 ,         1000.71
 2024-09-19 14:59:56 ,    tochigi_mqtt_999 ,      27.4 ,          40.68 ,         1000.76
 2024-09-19 15:00:01 ,    tochigi_mqtt_999 ,      27.4 ,          40.64 ,         1000.75
@@ -739,7 +738,7 @@ import pymysql.cursors #PythonからDBを取扱う
 
 #DBへの接続情報
 DB_USER = 'iot_user'
-DB_PASS = 'Passw0rd'
+DB_PASS = 'password'
 DB_HOST = 'localhost'
 DB_NAME = 'iot_storage'
 
