@@ -29,6 +29,6 @@
     * ユーザ名:sangi_自分の名前（例：sangi_hirota「パスワード：Passw0rd」）
     * データベース名：sangi_storage
     * テーブル名：environment
-    * 識別ノード:sangi_mqtt_esp32
+    * 識別ノードID:sangi_mqtt_esp32
 
 * 蓄積したデータを使って、「8. グラフによるデータの可視化」を参考に、温度・湿度・気圧のグラフをリアルタイムに表示する。
