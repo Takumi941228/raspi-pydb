@@ -22,14 +22,41 @@
         * 緑SW押下、緑LEDが点灯、LCDに気圧値を整数のみ表示（「P:1013」100で割ったものをint型にキャスト変換する良い）
         * 赤SW押下、赤LEDが点灯、LCDに湿度値を小数点第二位まで表示（「H:29.76」）
 
-* 自分のRaspberryPiをMQTTブローカとして、ESP32に接続されたBME280で取得した温度・湿度・気圧と時間を１０秒毎にMQTT経由で送信する。
-    * topic名:esp32/bme280
-    * device名:esp32-1
+    * 自分のRaspberryPiをMQTTブローカとして、ESP32に接続されたBME280で取得した温度・湿度・気圧と時間をタイマ割り込みを用いて１０秒毎にMQTT経由で送信する。
+        * topic名:esp32/bme280
+        * device名:esp32-1
 
-* 自分のRaspberryPiのMQTTブローカからのデータを受信し、受信した日付を付与して、新しく作成したデータベースに蓄積する。（「5. データの継続的な取得と蓄積」を参考）
+* 課題用の新しいデータベースを作成する。
     * ユーザ名:sangi_自分の名前（例：sangi_hirota「パスワード：Passw0rd」）
     * データベース名：sangi_storage
-    * テーブル名：environment
+    * テーブル名：Environment
+    * カラム内容は以下の表に示す。
+
+    | 内容 | カラム名 | データ型 | 制約 |
+    | --- | --- | --- | --- |
+    | 主キー | row_id | INT | PRIMARY KEY NOT NULL AUTO_INCREMENT |
+    | 取得した日付と時刻 | timestamp | TIMESTAMP | - |
+    | 取得したノードの識別子 | identifier | CHAR(24) | - |
+    | 温度 | temperature | DOUBLE | - |
+    | 湿度 | humidity | DOUBLE | - |
+    | 気圧 | pressure | DOUBLE | - |
+
+* 自分のRaspberryPiのMQTTブローカからのESP32のデータを受信し、識別ノードID及び受信した日付を付与して、新しく作成したデータベースに蓄積する。また、作成したPythonスクリプトは、継続的に蓄積させるため、常に実行し続けること。（「5. データの継続的な取得と蓄積」を参考）
     * 識別ノードID:sangi_mqtt_esp32
 
+* 自分のRaspberryPiに接続されたBME280のデータを自分自身のMQTTプローカに送信し、同じく自分のRaspberryPiのMQTTブローカから受信したデータを同様に上記データベースに蓄積する。また、作成したPythonスクリプトは、継続的に蓄積させるため、常に実行し続けること。（「MQTTブローカを経由した測定データの蓄積」を参考）
+    * 識別ノードID:sangi_mqtt_raspi
+    * topic名:raspi/bme280
+
 * 蓄積したデータを使って、温度・湿度・気圧のグラフをリアルタイムに表示する。（「8. グラフによるデータの可視化」を参考）
+    * 以下のように識別ノードIDの記述による選択で、グラフに表示するデータがESP32かRaspberryPiに接続されたBME280のデータを切り替えれること。
+
+```bash
+最新のデータをリアルタイムに表示します。
+どのノードのデータを表示しますか？
+ノードの Identifier(例: sangi_mqtt_esp32): sangi_mqtt_raspi
+何サンプル前のデータまで表示しますか？
+数値を入力(例: 20) : 20
+グラフの更新周期(秒)は？
+数値を入力(例: 10) : 10
+```
