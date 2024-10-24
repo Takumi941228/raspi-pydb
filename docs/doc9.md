@@ -338,8 +338,8 @@ def main():
         print('publish するデータ: ', send_json)
         mqtt_ambient_pub.publish(send_json)
  
-        #10秒やすみ
-        time.sleep(10)
+        #5秒やすみ
+        time.sleep(5)
 
 main()
 ```
