@@ -238,8 +238,8 @@ while True:
     #MQTTブローカへPUBLISHする
     mqttClient.publish(MQTT_TOPIC, send_json)
 
-    #10秒やすみ
-    time.sleep(10)
+    #5秒やすみ
+    time.sleep(5)
 ```
 
 プログラムの実行結果は次のとおりです。
