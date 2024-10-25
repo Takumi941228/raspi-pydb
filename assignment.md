@@ -17,7 +17,7 @@
         |---|---|
         |403-自分の名前(例:403-hirota)|Passw0rd|
 
-    * ESP32のIPアドレスは、DHCPサーバによる自動配布にすること。
+    * ESP32のIPアドレスは、DHCPサーバによる自動配布で取得する。
     * LAN内ネットワーク（IPアドレスやセグメント等）は、問わない。
     * ESP32は、2.4GHz帯のみ対応なので、注意すること。
     * ルータのWAN側は、各テーブルに取り付き済みのHUBに挿すこと。
@@ -35,7 +35,9 @@
 ### ソフトウェアの課題
 
 * ESP32のプログラムを変更する。
-    * LCDの表示内容の変更（常に１行目に現在時間を表示）（２行目に温度か湿度か気圧「タクトスイッチによる切り替え」を表示）
+    * LCDの表示内容の変更
+        * 常に１行目に現在時間を表示
+        * ２行目に温度か湿度か気圧「タクトスイッチによる切り替え」を表示
 
         |行数|操作|内容|
         |---|---|---|
@@ -57,17 +59,26 @@
     * ユーザ名:sangi_自分の名前（例:sangi_hirota）
     * パスワード:Passw0rd
     * データベース名:sangi_storage
-    * テーブル名:Environment
-    * カラム内容は以下の表に示す。
+        * sangi_自分の名前に、以下の権限を付与する。
 
-    | 内容 | カラム名 | データ型 | 制約 |
-    | --- | --- | --- | --- |
-    | 主キー | row_id | INT | PRIMARY KEY NOT NULL AUTO_INCREMENT |
-    | 取得した日付と時刻 | timestamp | TIMESTAMP | - |
-    | 取得したノードの識別子 | identifier | CHAR(24) | - |
-    | 温度 | temperature | DOUBLE | - |
-    | 湿度 | humidity | DOUBLE | - |
-    | 気圧 | pressure | DOUBLE | - |
+        |定義|内容|
+        |---|---|
+        |SELECT|参照|
+        |INSERT|行の追加|
+        |DELETE|行の削除|
+        |UPDATE|値の変更|
+
+    * テーブル名:Environment
+        * カラム内容は以下の表に示す。
+
+        | 内容 | カラム名 | データ型 | 制約 |
+        | --- | --- | --- | --- |
+        | 主キー | row_id | INT | PRIMARY KEY NOT NULL AUTO_INCREMENT |
+        | 取得した日付と時刻 | timestamp | TIMESTAMP | - |
+        | 取得したノードの識別子 | identifier | CHAR(24) | - |
+        | 温度 | temperature | DOUBLE | - |
+        | 湿度 | humidity | DOUBLE | - |
+        | 気圧 | pressure | DOUBLE | - |
 
 * 自分のRaspberryPiのMQTTブローカからのESP32のデータを受信し、識別ノードID及び受信した日付を付与して、新しく作成したデータベースに蓄積する。また、作成したPythonスクリプトは、継続的に蓄積させるため、常に実行し続けること。（「5. データの継続的な取得と蓄積」を参考）
     * 識別ノードID:sangi_mqtt_esp32
